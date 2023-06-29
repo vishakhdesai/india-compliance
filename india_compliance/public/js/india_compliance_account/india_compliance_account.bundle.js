@@ -34,7 +34,9 @@ india_compliance.pages.IndiaComplianceAccountPage = IndiaComplianceAccountPage;
 frappe.provide("india_compliance.gst_api");
 india_compliance.gst_api.call = async function (endpoint, options) {
     try {
-        const base_url = "https://asp.resilient.tech/v1/";
+        const base_url = "http://api.localhost:8001/api/method/apiman.api.v1.";
+        endpoint = endpoint.replace("/", ".")
+        // const base_url = "https://asp.resilient.tech/v1/";
         const url = base_url + endpoint;
 
         const headers = { "Content-Type": "application/json" };
@@ -43,6 +45,7 @@ india_compliance.gst_api.call = async function (endpoint, options) {
         if (options.with_api_secret || options.api_secret) {
             const api_secret = options.api_secret || (await get_api_secret());
             headers["x-api-key"] = api_secret;
+            headers["x-api-key-id"] = "o2ggz4qe32";
         }
 
         const args = {
