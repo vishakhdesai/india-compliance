@@ -1,0 +1,47 @@
+<div class="kanban-card mb-3 col-md-12" id="{{task.name}}" onclick="changeStatus(`{{task.name}}`)">
+    <div class="container task-header">
+        <div class="row">
+            <div class="text-left">
+                {% if task.priority %}
+                <span style="color: {{task.priorityColour}};">
+                    <i class="fa fa-flag"></i>
+                    {{task.priority}}
+                </span>
+                {% endif %}
+            </div>
+            <div class="text-centre">
+                {% if task.expected_time_formatted %}
+                <span class="ml-2 text-muted">
+                    <i class="fa fa-clock-o"></i>
+                    {{task.expected_time_formatted}}
+                </span>
+                {% endif %}
+            </div>
+            <div class="text-right">
+                <button class="btn btn-secondary btn-sm" onclick="changeStatus(`{{task.name}}`)">
+                    {% if task.nextAction == "Done" %}
+                    <i class="fa fa-check-circle"></i>
+                    {% else %}
+                    <i class="fa fa-plus"></i>
+                    {% endif %} &nbsp; {{task.nextAction}}
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="container task-title strong">{{task.title}}</div>
+
+    <div class="container task-footer text-muted">
+        <div class="row">
+            <div class="text-left">
+                {% if task.createdSince %}
+                {{task.createdSince}}
+                {% endif %}
+            </div>
+            <div class="text-right">
+                {% if task.expected_end_date %}
+                <span> Due: {{task.expected_end_date}} </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>

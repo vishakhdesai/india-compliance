@@ -1,0 +1,68 @@
+.page-form {
+	background-color: unset;
+	border-bottom: unset;
+}
+
+.chart-wrapper {
+	overflow: auto;
+}
+
+
+/* Tasks */
+
+.column-tasks {
+	max-height: 400px;
+	overflow: auto;
+	scrollbar-width: none;
+	-ms-overflow-style: none;
+}
+
+.column-tasks::-webkit-scrollbar {
+	display: none;
+}
+
+.kanban-card {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	background-color: #242a306b;
+	border-radius: var(--border-radius-md);
+	font-size: smaller;
+	padding: 0.5rem;
+	min-height: 110px;
+}
+
+.task-header .row,
+.task-footer .row,
+.task-column .row {
+	display: flex;
+	justify-content: space-between;
+	margin: auto;
+	align-items: center;
+	min-width: 60px;
+}
+
+.task-column .column-title {
+	font-size: medium;
+}
+
+.task-column {
+	font-size: small;
+}
+
+.btn.btn-sm {
+	font-size: smaller;
+}
+
+.task-title {
+	font-size: medium;
+}
+
+.kanban-card .container {
+	padding: 0 5px;
+	min-height: 20px;
+}
+
+.kanban-card:hover {
+	background-color: #5254576b;
+}

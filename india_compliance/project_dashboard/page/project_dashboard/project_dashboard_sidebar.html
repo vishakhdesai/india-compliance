@@ -1,0 +1,50 @@
+<div class="user-profile-sidebar">
+	<div class="profile-details">
+        <div class="detail-item">
+            {% if fullname %}
+			<h4 class="user-bio">{{fullname}}</h4>
+            {% endif %}
+            {% if designation %}
+            <h5 class="user-bio">{{designation}}</h5>
+            {% endif %}
+		</div>
+
+		<div class="detail-item user-stats-detail show">
+			<h5>{%=__("Tools") %}</h5>
+			<div class="user-stats mt-3">
+			</div>
+
+            <div class="profile-links detail-item">
+                <p><a class="edit-profile-link">
+                    <span class="liked-by like-action liked">
+                    <svg class="icon sm">
+                        <use class="like-icon"  href="#icon-heart"></use>
+                    </svg> {%=__("Team Memmbers") %}</span></a></p>
+                <p><a class="user-settings-link"><span class="liked-by like-action liked">
+                    <svg class="icon sm">
+                        <use class="like-icon"  href="#icon-heart"></use>
+                    </svg></span> {%=__("Active Projects") %}</a></p>
+            </div>
+		</div>
+        <div class="detail-item user-stats-detail show">
+			<h5>{%=__("This Week Summary") %}</h5>
+			<div class="user-stats mt-3">
+			</div>
+
+            <div class="profile-links detail-item">
+                <p><a class="edit-profile-link"><span class="liked-by like-action liked">
+                    <svg class="icon sm">
+                        <use class="like-icon"  href="#icon-heart"></use>
+                    </svg></span>  {%=__("Open Tasks") %}</a></p>
+                <p><a class="user-settings-link"><span class="liked-by like-action liked">
+                    <svg class="icon sm">
+                        <use class="like-icon"  href="#icon-heart"></use>
+                    </svg></span>  {%=__("Task Due") %}</a></p>
+                <p><a class="user-settings-link"><span class="liked-by like-action liked">
+                    <svg class="icon sm">
+                        <use class="like-icon"  href="#icon-heart"></use>
+                    </svg></span>  {%=__("Closing Projects") %}</a></p>
+            </div>
+		</div>
+	</div>
+</div>
