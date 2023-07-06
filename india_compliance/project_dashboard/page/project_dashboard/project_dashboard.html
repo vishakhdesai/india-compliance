@@ -78,16 +78,16 @@
     <div class="frappe-card chart-column-container project-charts col-md-8"></div>
     <div class="frappe-card chart-column-container project-charts col-md-4"></div>
 </div>
-<div class="row project-notes">
+<div class="row project-notes" id="notes">
     <div class="frappe-card chart-column-container col-md-12">
         <div class="title-area">
             <h4 class="card-title">{%=__("Notes") %}</h4>
             <div class="card-options project-notes">
-                <button type="button" class="btn btn-secondary btn-block">
+                <button type="button" class="btn btn-secondary btn-block" id="add-note">
                     + Add Note
                 </button>
             </div>
         </div>
-        <div class="chart-wrapper project-notes"></div>
+        <div class="notes-wrapper project-notes row d-flex justify-content-center"></div>
     </div>
 </div>

@@ -1,0 +1,16 @@
+<div class="kanban-card m-3 content-div note-card" id="{{note.name}}">
+    <div class="note-content">
+        <div class="container task-title task-header strong">{{note.title}}</div>
+        <div class="container task-title note-description control-content">{{note.notes}}</div>
+    </div>
+    <div class="container task-footer text-muted position-relative mb-2">
+        <div class="form-check position-absolute">
+            <input
+                class="form-check-input custom-checkbox"
+                type="checkbox"
+                value=""
+                id="checkbox-{{note.name}}"
+            />
+        </div>
+    </div>
+</div>

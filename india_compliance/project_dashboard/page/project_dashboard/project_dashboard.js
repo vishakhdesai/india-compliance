@@ -53,6 +53,7 @@ stride.EmployeeProjectDashboard = class EmployeeProjectDashboard {
         this.get_project_overview_html();
         this.get_project_info_html();
         this.get_chart_widgets();
+        this.render_project_notes();
     }
 
     setup_actions() {
@@ -100,74 +101,94 @@ stride.EmployeeProjectDashboard = class EmployeeProjectDashboard {
     }
 
     render_assigned_tasks() {
+        // const me = this;
+        // frappe.call({
+        //     method: "stride_projects.stride_projects.page.project_dashboard.project_dashboard.get_assigned_tasks",
+        //     args: {
+        //         project: this.project,
+        //     },
+        //     callback: function (r) {
+        //         if (!r.message) return;
+        //         const tasks = r.message;
+        //         console.log(tasks);
+        //         me.tasksWidget = new stride.TasksWidget({
+        // 			container: me.wrapper.find(".assigned-tasks .row-wrapper.container"),
+        // 			tasks: tasks,
+        // 		});
+        // 		me.tasksWidget.columns.forEach(column => {
+        // 			this.tasks_dict[column.task_status] = { tasks: column.tasks };
+        // 		});
+        //     },
+        // });
+    }
+
+    render_project_notes() {
         const me = this;
         frappe.call({
-            method: "stride_projects.stride_projects.page.project_dashboard.project_dashboard.get_assigned_tasks",
+            method: "india_compliance.project_dashboard.page.project_dashboard.project_dashboard.get_project_notes",
             args: {
                 project: this.project,
             },
             callback: function (r) {
                 if (!r.message) return;
-                const tasks = r.message;
-                console.log(tasks);
-                me.tasksWidget = new stride.TasksWidget({
-					container: me.wrapper.find(".assigned-tasks .row-wrapper.container"),
-					tasks: tasks,
-				});
-				me.tasksWidget.columns.forEach(column => {
-					this.tasks_dict[column.task_status] = { tasks: column.tasks };
-				});
+                const notes = r.message;
+                me.NotesWidget = new stride.NotesWidget({
+                    container: me.wrapper.find(
+                        ".project-notes .notes-wrapper.project-notes"
+                    ),
+                    notes: notes,
+                });
             },
         });
     }
 
     get_project_overview_html() {
-        const me = this;
-        const project_row = this.wrapper.find(".row.project-overview");
-        if (!this.project) return project_row.addClass("hidden");
-        frappe.call({
-            method: "stride_projects.stride_projects.doctype.project.project.get_all_milestones_html",
-            args: {
-                document: this.project,
-                milestone_dashboard_filter: "",
-            },
-            callback: function (r) {
-                if (!r.message) return;
-                project_row.removeClass("hidden");
-                me.wrapper
-                    .find(".chart-wrapper.project-overview")
-                    .empty()
-                    .append(r.message);
-            },
-        });
+        // const me = this;
+        // const project_row = this.wrapper.find(".row.project-overview");
+        // if (!this.project) return project_row.addClass("hidden");
+        // frappe.call({
+        //     method: "stride_projects.stride_projects.doctype.project.project.get_all_milestones_html",
+        //     args: {
+        //         document: this.project,
+        //         milestone_dashboard_filter: "",
+        //     },
+        //     callback: function (r) {
+        //         if (!r.message) return;
+        //         project_row.removeClass("hidden");
+        //         me.wrapper
+        //             .find(".chart-wrapper.project-overview")
+        //             .empty()
+        //             .append(r.message);
+        //     },
+        // });
     }
 
     get_project_info_html() {
-        const me = this;
-        const project_row = this.wrapper.find(".row.project-info");
-        if (!this.project) return project_row.addClass("hidden");
-        frappe.call({
-            method: "stride_projects.stride_projects.doctype.project.project.get_users_html",
-            args: {
-                document: this.project,
-            },
-            callback: function (r) {
-                if (!r.message) return;
-                project_row.removeClass("hidden");
-                me.wrapper.find(".project-info.team-info").empty().append(r.message);
-            },
-        });
-        frappe.call({
-            method: "stride_projects.stride_projects.doctype.project.project.get_project_links_html",
-            args: {
-                document: this.project,
-            },
-            callback: function (r) {
-                if (!r.message) return;
-                project_row.removeClass("hidden");
-                me.wrapper.find(".project-info.link-info").empty().append(r.message);
-            },
-        });
+        // const me = this;
+        // const project_row = this.wrapper.find(".row.project-info");
+        // if (!this.project) return project_row.addClass("hidden");
+        // frappe.call({
+        //     method: "stride_projects.stride_projects.doctype.project.project.get_users_html",
+        //     args: {
+        //         document: this.project,
+        //     },
+        //     callback: function (r) {
+        //         if (!r.message) return;
+        //         project_row.removeClass("hidden");
+        //         me.wrapper.find(".project-info.team-info").empty().append(r.message);
+        //     },
+        // });
+        // frappe.call({
+        //     method: "stride_projects.stride_projects.doctype.project.project.get_project_links_html",
+        //     args: {
+        //         document: this.project,
+        //     },
+        //     callback: function (r) {
+        //         if (!r.message) return;
+        //         project_row.removeClass("hidden");
+        //         me.wrapper.find(".project-info.link-info").empty().append(r.message);
+        //     },
+        // });
     }
 
     get_chart_widgets() {
@@ -256,13 +277,17 @@ stride.TasksWidget = class TasksWidget {
         const columnContainer = this.container.find(".row");
 
         this.tasks.forEach(task => {
-			task.createdSince = frappe.datetime.comment_when(task.creation);
-			if (task.expected_time) {
-				let expected_time_formatted = frappe.utils.seconds_to_duration(task.expected_time);
-				task.expected_time_formatted = `${expected_time_formatted.days}d ${expected_time_formatted.hours}h ${expected_time_formatted.minutes}m`;
-			}
+            task.createdSince = frappe.datetime.comment_when(task.creation);
+            if (task.expected_time) {
+                let expected_time_formatted = frappe.utils.seconds_to_duration(
+                    task.expected_time
+                );
+                task.expected_time_formatted = `${expected_time_formatted.days}d ${expected_time_formatted.hours}h ${expected_time_formatted.minutes}m`;
+            }
             task.priorityColour = PRIORITIES[task.priority];
-			task.expected_end_date = frappe.datetime.str_to_user(task.expected_end_date);
+            task.expected_end_date = frappe.datetime.str_to_user(
+                task.expected_end_date
+            );
             const column = this.columns.get(task.status);
             if (column) {
                 stride[column.task_status] = { tasks: column.tasks };
@@ -286,7 +311,7 @@ stride.TaskColumn = class TaskColumn {
     show(title, tasks) {
         let totalTime = 0;
         const TASK_STATUS = {
-            "Backlog": "backlog",
+            Backlog: "backlog",
             "To Do": "to-do",
             "In Progress": "in-progress",
         };
@@ -295,8 +320,8 @@ stride.TaskColumn = class TaskColumn {
                 totalTime += parseInt(task.expected_time);
             }
         });
-		totalTime = frappe.utils.seconds_to_duration(totalTime);
-		totalTime = `${totalTime.days}d ${totalTime.hours}h ${totalTime.minutes}m`;
+        totalTime = frappe.utils.seconds_to_duration(totalTime);
+        totalTime = `${totalTime.days}d ${totalTime.hours}h ${totalTime.minutes}m`;
         this.container.append(
             frappe.render_template("task_column", {
                 column_title: title,
@@ -326,24 +351,114 @@ stride.TaskCard = class TaskCard {
     }
 };
 
+stride.NotesWidget = class NotesWidget {
+    constructor(opts) {
+        $.extend(this, opts);
+        this.show();
+        this.setup_actions();
+    }
+    calculateBrightness(color) {
+        const r = parseInt(color.substr(1, 2), 16);
+        const g = parseInt(color.substr(3, 2), 16);
+        const b = parseInt(color.substr(5, 2), 16);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        return brightness;
+    }
+    show() {
+        this.notes.forEach(note => {
+            this.create_note(note);
+        });
+    }
+    create_note(note) {
+        this.container.append(frappe.render_template("note_card", { note: note }));
+        let note_container = document.getElementById(note.name);
+        let brightness = this.calculateBrightness(note.color);
+        let fontColor = brightness > 128 ? "#000000" : "#FFFFFF";
+        note_container.style.backgroundColor = note.color;
+        note_container.style.color = fontColor;
+        this.set_note_on_click_listener(note);
+        this.set_checkbox_listener(note);
+    }
+    set_checkbox_listener(note) {
+        let note_checkbox = document.getElementById(`checkbox-${note.name}`);
+        let note_container = document.getElementById(note.name);
+        note_checkbox.addEventListener("change", () => {
+            frappe.confirm(
+                "Are you sure you want to mark this note as completed?",
+                () => {
+                    frappe.call({
+                        method: "india_compliance.project_dashboard.page.project_dashboard.project_dashboard.mark_note_as_completed",
+                        args: {
+                            note_name: note.name,
+                        },
+                        callback: function (res) {
+                            let note = res.message;
+                            if (note && note.is_completed == 1) {
+                                note_container.remove();
+                            }
+                        },
+                    });
+                },
+                () => {
+                    note_checkbox.checked = false;
+                }
+            );
+        });
+    }
+    set_note_on_click_listener(note) {
+        let note_container = document.getElementById(note.name);
+        let note_content_container = note_container.querySelector(".note-content");
+
+        note_content_container.addEventListener("click", () => {
+            frappe.db.get_doc("Project Note", note.name).then(doc => {
+                frappe.ui.form.make_quick_entry(
+                    "Project Note",
+                    note => {
+                        const titleElement =
+                            note_container.querySelector(".task-header.strong");
+                        const descriptionElement = note_container.querySelector(
+                            ".task-title.note-description"
+                        );
+                        let brightness = this.calculateBrightness(note.color);
+                        let fontColor = brightness > 128 ? "#000000" : "#FFFFFF";
+                        titleElement.textContent = note.title;
+                        descriptionElement.textContent = note.notes;
+                        note_container.style.backgroundColor = note.color;
+                        note_container.style.color = fontColor;
+                    },
+                    null,
+                    doc
+                );
+            });
+        });
+    }
+    setup_actions() {
+        let me = this;
+        $("#add-note").on("click", () => {
+            frappe.ui.form.make_quick_entry("Project Note", note => {
+                this.create_note(note);
+                me.notes.push(note);
+            });
+        });
+    }
+};
+
 function toggleIcon() {
     var sortIcon = document.getElementById(`sortIcon`);
     var currentIcon = sortIcon.getAttribute("href");
     if (currentIcon === "#icon-sort-ascending") {
         sortIcon.setAttribute("href", "#icon-sort-descending");
-		console.log("descending");
     } else {
         sortIcon.setAttribute("href", "#icon-sort-ascending");
-		console.log("ascending");
     }
 }
 
 function selectOption(option) {
     var option_field = document.getElementById(`selectedOption`);
     option_field.textContent = option;
-	console.log(option);
+    console.log(option);
 }
 
 function changeStatus(task_name) {
-	console.log(task_name);
+    console.log(task_name);
 }

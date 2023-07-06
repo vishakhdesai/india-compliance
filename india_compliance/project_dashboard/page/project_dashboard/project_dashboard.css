@@ -66,3 +66,37 @@
 .kanban-card:hover {
 	background-color: #5254576b;
 }
+
+.content-div {
+	width: 310px;
+	height: 300px;
+}
+
+.notes-wrapper {
+	height: 700px;
+	overflow: auto;
+}
+
+
+.control-content {
+	width: inherit;
+	overflow: hidden;
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 9;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	word-wrap: break-word;
+}
+
+.note-content {
+	height: inherit;
+}
+
+.custom-checkbox {
+	transform: scale(1.5);
+}
+
+.user-profile-sidebar {
+	position: fixed;
+}
