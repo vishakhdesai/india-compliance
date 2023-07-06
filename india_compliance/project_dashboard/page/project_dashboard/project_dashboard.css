@@ -12,6 +12,7 @@
 
 .column-tasks {
 	max-height: 400px;
+	min-height: 300px;
 	overflow: auto;
 	scrollbar-width: none;
 	-ms-overflow-style: none;
@@ -25,11 +26,20 @@
 	display: flex;
 	flex-direction: column;
 	justify-content: space-between;
-	background-color: #242a306b;
+	background-color: #161a1fcc;
 	border-radius: var(--border-radius-md);
 	font-size: smaller;
 	padding: 0.5rem;
 	min-height: 110px;
+}
+
+.kanban-card:hover {
+	background-color: var(--fg-hover-color);
+}
+
+.kanban-card .container {
+	padding: 0 5px;
+	min-height: 20px;
 }
 
 .task-header .row,
@@ -54,26 +64,18 @@
 	font-size: smaller;
 }
 
-.task-title {
+.task-title, .note-content{
 	font-size: medium;
-}
-
-.kanban-card .container {
-	padding: 0 5px;
-	min-height: 20px;
-}
-
-.kanban-card:hover {
-	background-color: #5254576b;
 }
 
 .content-div {
 	width: 310px;
-	height: 300px;
+	height: 200px;
 }
 
 .notes-wrapper {
-	height: 700px;
+	max-height: 600px;
+	min-height: 250px;
 	overflow: auto;
 }
 
@@ -83,7 +85,7 @@
 	overflow: hidden;
 	display: -webkit-box;
 	-webkit-box-orient: vertical;
-	-webkit-line-clamp: 9;
+	-webkit-line-clamp: 5;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	word-wrap: break-word;
@@ -94,9 +96,5 @@
 }
 
 .custom-checkbox {
-	transform: scale(1.5);
-}
-
-.user-profile-sidebar {
-	position: fixed;
+    transform: scale(1.5); 
 }

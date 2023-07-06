@@ -1,32 +1,49 @@
-frappe.provide("stride");
+frappe.provide("stride_projects");
 
 frappe.pages["project-dashboard"].on_page_load = function (wrapper) {
-    var page = frappe.ui.make_app_page({
+    frappe.ui.make_app_page({
         parent: wrapper,
         title: "Project Dashboard",
         single_column: false,
     });
 
-    stride.employee_project_dashboard = new stride.EmployeeProjectDashboard(wrapper);
+    stride_projects.employee_project_dashboard =
+        new stride_projects.EmployeeProjectDashboard(wrapper);
     $(wrapper).bind("show", function () {
-        stride.employee_project_dashboard.show();
+        stride_projects.employee_project_dashboard.show();
     });
 };
 
-stride.EmployeeProjectDashboard = class EmployeeProjectDashboard {
+stride_projects.EmployeeProjectDashboard = class EmployeeProjectDashboard {
     constructor(wrapper) {
+        this._initialize_properties(wrapper);
+        this._find_elements();
+        this.set_sidebar_categories();
+    }
+
+    _initialize_properties(wrapper) {
         this.wrapper = $(wrapper);
         this.page = wrapper.page;
-        this.sidebar = this.wrapper.find(".layout-side-section");
-        this.main_section = this.wrapper.find(".layout-main-section");
-        this.sidebar_categories = ["Tools", "This Week Summary"];
+        this.user = frappe.user_info(frappe.session.user);
         this.chart_widget_list = [];
         this.chart_widget_dict = {};
-        this.tasks_dict = [];
     }
+
+    _find_elements() {
+        this.sidebar = this.wrapper.find(".layout-side-section");
+        this.main_section = this.wrapper.find(".layout-main-section").empty();
+        this.filters_section = this.wrapper
+            .find(".page-head .container")
+            .append(
+                `<div class="row flex filters mb-3"><div class="col-lg-2 layout-side-section"></div></div>`
+            );
+    }
+
+    set_sidebar_categories() {
+        this.sidebar_categories = ["Tools", "This Week Summary"];
+    }
+
     show() {
-        let route = frappe.get_route();
-        this.user = frappe.user_info(frappe.session.user);
         this.setup_header();
         this.setup_sidebar();
         this.render_main_section();
@@ -57,19 +74,32 @@ stride.EmployeeProjectDashboard = class EmployeeProjectDashboard {
     }
 
     setup_actions() {
-        this.page.add_inner_button(__("View Calendar"), () => {});
+        this.page.add_inner_button(__("View Calendar"), () => {
+            frappe.route_options = {
+                project: this.project,
+                _assign: ["like", `%"${frappe.session.user}"%`],
+            };
+            frappe.set_route("List", "Project Activity", "Calendar");
+        });
         this.page.add_inner_button(
-            __("Adhoc Task"),
+            __("Project Task"),
             () => {
-                // ToDo:
+                new stride_projects.TaskQuickEntry(this.project, "", () =>
+                    this.reload()
+                );
             },
             __("Create")
         );
 
         this.page.add_inner_button(
-            __("Item 2"),
+            __("Adhoc Task"),
             () => {
-                // ToDo:
+                new stride_projects.TaskQuickEntry(
+                    "",
+                    "",
+                    () => this.reload(),
+                    true
+                );
             },
             __("Create")
         );
@@ -80,72 +110,139 @@ stride.EmployeeProjectDashboard = class EmployeeProjectDashboard {
         });
     }
 
-    add_project_filters() {
-        if (this.page.page_form.find(".frappe-control").length > 0) return;
+    async add_project_filters() {
+        if (this.wrapper.find(".frappe-control").length > 0) return;
 
         const me = this;
-        this.filter = this.page.add_field({
-            label: "Project",
-            fieldtype: "Link",
-            fieldname: "project",
-            options: "Project",
-            change() {
-                me.project = me.filter.get_value();
-                me.get_project_overview_html();
-                me.get_project_info_html();
-                me.refresh_chart_widgets();
+        this.filter = this.page.add_field(
+            {
+                label: "Project",
+                fieldtype: "Autocomplete",
+                fieldname: "project",
+                options: await this.get_user_projects(),
+                default: "All Projects",
+                change() {
+                    me.set_current_project();
+                    me.reload();
+                },
             },
-        });
-        this.project = this.filter.get_value();
+            this.filters_section.find(".filters")
+        );
+        this.set_current_project();
         $(this.filter.wrapper).removeClass("col-md-2").addClass("col-md-3");
     }
 
+    set_current_project() {
+        this.project = this.filter.get_value();
+        this.is_no_project_selected = false;
+        if (this.project === "None") {
+            this.project = "";
+            this.is_no_project_selected = true;
+        } else if (this.project === "All Projects") {
+            this.project = "";
+        }
+    }
+
+    async get_user_projects() {
+        let projects = [];
+        // await frappe.call({
+        //     method: "stride_projects.stride_projects.page.project_dashboard.project_dashboard.get_user_projects",
+        //     args: {
+        //         user: frappe.session.user,
+        //     },
+        //     async: false,
+        //     callback: function (r) {
+        //         if (!r.message) return;
+        //         projects = r.message;
+        //     },
+        // });
+        return projects;
+    }
+
     render_assigned_tasks() {
-        // const me = this;
+        this._fetch_tasks((tasks) => {
+            this._handle_task_widget(tasks);
+        });
+    }
+
+    _fetch_tasks(callback) {
+        let project = this.project;
+        if (this.is_no_project_selected) project = "None";
+
         // frappe.call({
         //     method: "stride_projects.stride_projects.page.project_dashboard.project_dashboard.get_assigned_tasks",
-        //     args: {
-        //         project: this.project,
-        //     },
+        //     args: { project },
         //     callback: function (r) {
         //         if (!r.message) return;
         //         const tasks = r.message;
-        //         console.log(tasks);
-        //         me.tasksWidget = new stride.TasksWidget({
-        // 			container: me.wrapper.find(".assigned-tasks .row-wrapper.container"),
-        // 			tasks: tasks,
-        // 		});
-        // 		me.tasksWidget.columns.forEach(column => {
-        // 			this.tasks_dict[column.task_status] = { tasks: column.tasks };
-        // 		});
+        //         callback(tasks);
         //     },
         // });
     }
 
-    render_project_notes() {
-        const me = this;
-        frappe.call({
-            method: "india_compliance.project_dashboard.page.project_dashboard.project_dashboard.get_project_notes",
-            args: {
-                project: this.project,
+    _handle_task_widget(tasks) {
+        const taskWidgetContainer = this.wrapper.find(
+            ".row.assigned-tasks .frappe-card"
+        );
+        const column_object = {
+            Draft: {
+                name: "Backlog",
+                next_action: "ToDo",
+                field_name: "backlog",
+                tasks: [],
             },
-            callback: function (r) {
-                if (!r.message) return;
-                const notes = r.message;
-                me.NotesWidget = new stride.NotesWidget({
-                    container: me.wrapper.find(
-                        ".project-notes .notes-wrapper.project-notes"
-                    ),
-                    notes: notes,
-                });
+            ToDo: {
+                name: "ToDo",
+                next_action: "In Progress",
+                field_name: "todo",
+                tasks: [],
             },
-        });
+            "In Progress": {
+                name: "In Progress",
+                next_action: "Done",
+                field_name: "in_progress",
+                tasks: [],
+            },
+        };
+        this.task_widget_columns = new Map(Object.entries(column_object));
+        this.task_sort_options = {
+            sort_by: "deadline",
+            sort_by_label: __("Deadline"),
+            sort_order: "asc",
+            options: [
+                {
+                    label: __("Deadline"),
+                    fieldname: "deadline",
+                    fieldtype: "Date",
+                    data_attribute: "data-deadline",
+                },
+                {
+                    label: __("Priority"),
+                    fieldname: "priority",
+                    data_attribute: "data-priority",
+                },
+            ],
+        };
+
+        const options = {
+            title: "Assigned Tasks",
+            container: taskWidgetContainer,
+            columns: this.task_widget_columns,
+            sort_options: this.task_sort_options,
+            tasks,
+        };
+
+        if (!this.tasksWidget) {
+            this.tasksWidget = new stride_projects.TasksWidget(options);
+        } else {
+            this.tasksWidget.load_task_widget(options);
+        }
     }
 
     get_project_overview_html() {
-        // const me = this;
-        // const project_row = this.wrapper.find(".row.project-overview");
-        // if (!this.project) return project_row.addClass("hidden");
+        const me = this;
+        const project_row = this.wrapper.find(".row.project-overview");
+        if (!this.project) return project_row.addClass("hidden");
         // frappe.call({
         //     method: "stride_projects.stride_projects.doctype.project.project.get_all_milestones_html",
         //     args: {
@@ -164,9 +261,9 @@ stride.EmployeeProjectDashboard = class EmployeeProjectDashboard {
     }
 
     get_project_info_html() {
-        // const me = this;
-        // const project_row = this.wrapper.find(".row.project-info");
-        // if (!this.project) return project_row.addClass("hidden");
+        const me = this;
+        const project_row = this.wrapper.find(".row.project-info");
+        if (!this.project) return project_row.addClass("hidden");
         // frappe.call({
         //     method: "stride_projects.stride_projects.doctype.project.project.get_users_html",
         //     args: {
@@ -175,7 +272,10 @@ stride.EmployeeProjectDashboard = class EmployeeProjectDashboard {
         //     callback: function (r) {
         //         if (!r.message) return;
         //         project_row.removeClass("hidden");
-        //         me.wrapper.find(".project-info.team-info").empty().append(r.message);
+        //         me.wrapper
+        //             .find(".project-info.team-info")
+        //             .empty()
+        //             .append(r.message);
         //     },
         // });
         // frappe.call({
@@ -186,7 +286,10 @@ stride.EmployeeProjectDashboard = class EmployeeProjectDashboard {
         //     callback: function (r) {
         //         if (!r.message) return;
         //         project_row.removeClass("hidden");
-        //         me.wrapper.find(".project-info.link-info").empty().append(r.message);
+        //         me.wrapper
+        //             .find(".project-info.link-info")
+        //             .empty()
+        //             .append(r.message);
         //     },
         // });
     }
@@ -197,20 +300,23 @@ stride.EmployeeProjectDashboard = class EmployeeProjectDashboard {
                 chart_name: "Completed Tasks",
                 width: "Full",
                 container: this.wrapper.find(".project-charts.col-md-8"),
+                widget_type: "chart",
             },
             {
                 chart_name: "Tasks Breakdown",
                 width: "Full",
                 container: this.wrapper.find(".project-charts.col-md-4"),
+                widget_type: "chart",
             },
         ];
 
-        charts.forEach(chart => {
+        charts.forEach((chart) => {
             let widget = frappe.widget.make_widget({
                 ...chart,
                 label: chart.chart_name,
-                options: {},
-                widget_type: "chart",
+                options: {
+                    legendRowHeight: 30,
+                },
             });
 
             this.chart_widget_list.push(widget);
@@ -221,7 +327,7 @@ stride.EmployeeProjectDashboard = class EmployeeProjectDashboard {
     }
 
     refresh_chart_widgets() {
-        this.chart_widget_list.forEach(widget => {
+        this.chart_widget_list.forEach((widget) => {
             if (!this.project) delete widget.filters.project;
             else widget.filters.project = this.project;
 
@@ -229,236 +335,431 @@ stride.EmployeeProjectDashboard = class EmployeeProjectDashboard {
             widget.fetch_and_update_chart();
         });
     }
+
+    render_project_notes() {
+        const me = this;
+        frappe.call({
+            method: "india_compliance.project_dashboard.page.project_dashboard.project_dashboard.get_project_notes",
+            args: {
+                project: this.project,
+            },
+            callback: function (r) {
+                if (!r.message) return;
+                const notes = r.message;
+                me.NotesWidget = new stride_projects.NotesWidget({
+                    container: me.wrapper.find(
+                        ".project-notes .notes-wrapper.project-notes"
+                    ),
+                    notes: notes,
+                    project: me.project,
+                });
+            },
+        });
+    }
+
+    reload() {
+        this.get_project_overview_html();
+        this.get_project_info_html();
+        this.refresh_chart_widgets();
+        this.render_assigned_tasks();
+        this.render_project_notes();
+    }
 };
 
-stride.TasksWidget = class TasksWidget {
+stride_projects.TasksWidget = class TasksWidget {
+    PRIORITY = {
+        High: {
+            name: "High",
+            colour: "#cf3636",
+            code: 1,
+        },
+        Medium: {
+            name: "Medium",
+            colour: "darkgoldenrod",
+            code: 2,
+        },
+        Low: {
+            name: "Low",
+            colour: "",
+            code: 3,
+        },
+    };
+
     constructor(opts) {
         $.extend(this, opts);
-        this.columns = new Map([
-            [
-                "Draft",
-                {
-                    columnName: "Backlog",
-                    nextAction: "To Do",
-                    tasks: [],
-                    task_status: "backlog",
-                },
-            ],
-            [
-                "ToDo",
-                {
-                    columnName: "To Do",
-                    nextAction: "In Progress",
-                    tasks: [],
-                    task_status: "todo",
-                },
-            ],
-            [
-                "In Progress",
-                {
-                    columnName: "In Progress",
-                    nextAction: "Done",
-                    tasks: [],
-                    task_status: "in_progress",
-                },
-            ],
-        ]);
+        this.columns_list = [];
         this.show();
     }
 
+    load_task_widget(opts) {
+        $.extend(this, opts);
+        this.columns_list = [];
+        this.refresh_tasks();
+    }
+
     show() {
-        this.container.append(`<div class="row task-widget"></div>`);
+        this.setup_title();
+        this.setup_sorting();
+        this.refresh_tasks();
+    }
 
-        const PRIORITIES = {
-            High: "#cf3636",
-            Low: "",
-            Medium: "darkgoldenrod",
-        };
-        const columnContainer = this.container.find(".row");
+    refresh_tasks() {
+        this.setup_tasks_area();
+        this.process_all_tasks();
+        this.initialize_task_columns_and_sort_them();
+    }
 
-        this.tasks.forEach(task => {
-            task.createdSince = frappe.datetime.comment_when(task.creation);
-            if (task.expected_time) {
-                let expected_time_formatted = frappe.utils.seconds_to_duration(
-                    task.expected_time
-                );
-                task.expected_time_formatted = `${expected_time_formatted.days}d ${expected_time_formatted.hours}h ${expected_time_formatted.minutes}m`;
-            }
-            task.priorityColour = PRIORITIES[task.priority];
-            task.expected_end_date = frappe.datetime.str_to_user(
-                task.expected_end_date
+    initialize_task_columns_and_sort_them() {
+        this.columns.forEach((column) => {
+            this.columns_list.push(
+                new stride_projects.TaskColumn({
+                    container: this.column_container,
+                    column,
+                })
             );
+        });
+        this.sort_tasks();
+    }
+
+    process_all_tasks() {
+        this.tasks.forEach((task) => {
+            Object.assign(task, {
+                created_since: frappe.datetime.comment_when(task.creation),
+                expected_time_formatted: this.format_expected_time(
+                    task.expected_time
+                ),
+                priority_colour: this.get_priority_colour(task.priority),
+                priority_number: this.get_priority_number(task.priority),
+                deadline: frappe.datetime.str_to_user(task.expected_end_date),
+            });
+
             const column = this.columns.get(task.status);
             if (column) {
-                stride[column.task_status] = { tasks: column.tasks };
-                task.nextAction = column.nextAction;
+                task.next_action = column.next_action;
                 column.tasks.push(task);
             }
         });
-
-        this.columns.forEach(column => {
-            const taskColumn = new stride.TaskColumn(columnContainer);
-            taskColumn.show(column.columnName, column.tasks);
-        });
-    }
-};
-
-stride.TaskColumn = class TaskColumn {
-    constructor(container) {
-        this.container = container;
     }
 
-    show(title, tasks) {
-        let totalTime = 0;
-        const TASK_STATUS = {
-            Backlog: "backlog",
-            "To Do": "to-do",
-            "In Progress": "in-progress",
-        };
-        tasks.forEach(task => {
-            if (task.expected_time) {
-                totalTime += parseInt(task.expected_time);
-            }
-        });
-        totalTime = frappe.utils.seconds_to_duration(totalTime);
-        totalTime = `${totalTime.days}d ${totalTime.hours}h ${totalTime.minutes}m`;
-        this.container.append(
-            frappe.render_template("task_column", {
-                column_title: title,
-                totalTime: totalTime,
-                totalTasks: tasks.length,
-                status: TASK_STATUS[title],
-            })
+    format_expected_time(expected_time) {
+        if (!expected_time) return;
+        return seconds_to_duration(expected_time);
+    }
+
+    get_priority_colour(priority) {
+        return this.PRIORITY[priority].colour;
+    }
+
+    get_priority_number(priority) {
+        return this.PRIORITY[priority].code;
+    }
+
+    setup_title() {
+        this.container.prepend(
+            `
+            <div class="title-area d-flex">
+                <h4 class="title">${this.title}</h4>
+            </div>
+            `
         );
+    }
 
-        tasks.forEach(task => {
-            const cardContainer = this.container.find(
-                `.task-column.${TASK_STATUS[title]} .column-tasks`
-            );
-            const card = new stride.TaskCard({ container: cardContainer, task });
+    setup_sorting() {
+        const title_area = this.container.find(".title-area");
+        title_area.append(
+            `<div class="sort-selector justify-content-end ml-auto"></div>`
+        );
+        this.sort_selector = new frappe.ui.SortSelector({
+            parent: title_area.find(".sort-selector"),
+            change: (sort_by, sort_order) => {
+                this.sort_tasks();
+            },
+            args: this.sort_options,
         });
     }
-};
 
-stride.TaskCard = class TaskCard {
-    constructor(opts) {
-        $.extend(this, opts);
-        this.show();
+    sort_tasks() {
+        const { sort_by, sort_order } = this._get_sort_options();
+        this.columns_list.forEach((column) => {
+            column.sort_tasks(sort_by, sort_order, this.sort_selector);
+        });
     }
 
-    show() {
-        this.container.append(frappe.render_template("task_card", { task: this.task }));
+    _get_sort_options() {
+        const sort_order = this.container
+            .find(".sort-selector .btn.btn-order")
+            .attr("data-value");
+        const selectedText = this.container
+            .find(".sort-selector .sort-selector-button .dropdown-text")
+            .text()
+            .trim();
+
+        let sort_by;
+        this.container
+            .find(
+                ".sort-selector .sort-selector-button .dropdown-menu .dropdown-item"
+            )
+            .each(function () {
+                if ($(this).text().trim() === selectedText)
+                    sort_by = $(this).attr("data-value");
+            });
+
+        return { sort_by, sort_order };
+    }
+
+    setup_tasks_area() {
+        this.container
+            .find(".row-wrapper")
+            .empty()
+            .append(`<div class="row task-widget"></div>`);
+
+        this.column_container = this.container.find(".row.task-widget");
     }
 };
 
-stride.NotesWidget = class NotesWidget {
+stride_projects.TaskColumn = class TaskColumn {
     constructor(opts) {
-        $.extend(this, opts);
+        this.load_columns(opts);
+    }
+
+    load_columns(opts) {
+        this.initialize_properties(opts);
         this.show();
         this.setup_actions();
     }
-    calculateBrightness(color) {
-        const r = parseInt(color.substr(1, 2), 16);
-        const g = parseInt(color.substr(3, 2), 16);
-        const b = parseInt(color.substr(5, 2), 16);
-        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-        return brightness;
+
+    initialize_properties(opts) {
+        $.extend(this, opts);
+        this.title = this.column.name;
+        this.tasks = this.column.tasks;
+        this.task_list = [];
     }
+
     show() {
-        this.notes.forEach(note => {
+        this.append_task_column();
+        const column_container = this.get_column_container().empty();
+        this.tasks.forEach((task) =>
+            this.push_new_task_card({ container: column_container, task })
+        );
+    }
+
+    push_new_task_card(opts) {
+        const new_task = new stride_projects.TaskCard(opts);
+        this.task_list.push(new_task);
+    }
+
+    calculate_total_time() {
+        if (!this.tasks.length) return;
+        return seconds_to_duration(this._get_total_time());
+    }
+
+    _get_total_time() {
+        return this.tasks.reduce((total, task) => {
+            if (task.expected_time) total += parseInt(task.expected_time);
+            return total;
+        }, 0);
+    }
+
+    append_task_column() {
+        const columnData = {
+            column_title: this.title,
+            total_time: this.calculate_total_time(),
+            total_tasks: this.tasks.length,
+            status: this.column.field_name,
+        };
+        const template = frappe.render_template("task_column", columnData);
+        return this.container.append(template);
+    }
+
+    get_column_container() {
+        return this.container.find(
+            `.task-column.${this.column.field_name} .column-tasks`
+        );
+    }
+
+    sort_tasks(sort_by, order, sort_selector) {
+        const field = sort_selector.args.options.find(
+            (option) => option.fieldname === sort_by
+        );
+        const is_date = field.fieldtype === "Date";
+        const attribute = field.data_attribute;
+
+        this._sort_tasks(attribute, order, is_date);
+        this.setup_actions();
+    }
+
+    _sort_tasks(attribute, order, is_date = false) {
+        const container = this.get_column_container();
+        let items = container.find(".kanban-card");
+        items = Array.prototype.slice.call(items);
+
+        items.sort((a, b) => {
+            a = a.getAttribute(attribute);
+            b = b.getAttribute(attribute);
+            if (is_date) {
+                a = new Date(a);
+                b = new Date(b);
+            }
+
+            if (order === "asc") return a > b ? 1 : -1;
+
+            return a < b ? 1 : -1;
+        });
+
+        container.empty().append(items);
+    }
+
+    setup_actions() {
+        const container = this.get_column_container();
+
+        container.find(".kanban-card").on("click", (e) => {
+            const task_name = e.currentTarget.id;
+            new stride_projects.TaskQuickEdit(task_name, () =>
+                stride_projects.employee_project_dashboard.reload()
+            );
+        });
+
+        container.find(".kanban-card .btn").on("click", (e) => {
+            e.stopPropagation();
+            const task_name = e.currentTarget.id;
+            const next_action = e.currentTarget.dataset.nextAction;
+            // frappe.call({
+            //     method: "stride_projects.stride_projects.page.project_dashboard.project_dashboard.update_task_status",
+            //     args: {
+            //         task: task_name,
+            //         status: next_action,
+            //     },
+            //     callback: function (r) {
+            //         if (!r.message) return;
+            //         stride_projects.employee_project_dashboard.reload();
+            //     },
+            // });
+        });
+    }
+};
+
+stride_projects.TaskCard = class TaskCard {
+    constructor(opts) {
+        $.extend(this, opts);
+        this.append_task_card();
+    }
+
+    append_task_card() {
+        this.task_container = this.container.append(
+            frappe.render_template("task_card", { task: this.task })
+        );
+    }
+};
+
+function seconds_to_duration(total_time) {
+    let timeObj = frappe.utils.seconds_to_duration(total_time, {
+        hide_days: true,
+    });
+    return `${timeObj.hours}h ${timeObj.minutes}m`;
+}
+
+stride_projects.NotesWidget = class NotesWidget {
+    constructor(opts) {
+        $.extend(this, opts);
+        this.container = this.container.empty();
+        this.show();
+        this.setup_actions();
+    }
+
+    show() {
+        this.notes.forEach((note) => {
             this.create_note(note);
         });
     }
-    create_note(note) {
-        this.container.append(frappe.render_template("note_card", { note: note }));
-        let note_container = document.getElementById(note.name);
-        let brightness = this.calculateBrightness(note.color);
-        let fontColor = brightness > 128 ? "#000000" : "#FFFFFF";
-        note_container.style.backgroundColor = note.color;
-        note_container.style.color = fontColor;
-        this.set_note_on_click_listener(note);
-        this.set_checkbox_listener(note);
+
+    create_note(note, prepend) {
+        const note_container = this.get_note_container(note, prepend);
+        this.style_note(note, note_container);
+        this.setup_note_actions(note, note_container);
     }
-    set_checkbox_listener(note) {
-        let note_checkbox = document.getElementById(`checkbox-${note.name}`);
-        let note_container = document.getElementById(note.name);
-        note_checkbox.addEventListener("change", () => {
-            frappe.confirm(
-                "Are you sure you want to mark this note as completed?",
-                () => {
-                    frappe.call({
-                        method: "india_compliance.project_dashboard.page.project_dashboard.project_dashboard.mark_note_as_completed",
-                        args: {
-                            note_name: note.name,
-                        },
-                        callback: function (res) {
-                            let note = res.message;
-                            if (note && note.is_completed == 1) {
-                                note_container.remove();
-                            }
-                        },
-                    });
+
+    setup_note_actions(note, note_container) {
+        note_container.on("click", () => {
+            frappe.db.get_doc("Project Note", note.name).then((doc) => {
+                this.update_edited_note(note_container, doc);
+            });
+        });
+
+        note_container.find(".custom-checkbox").on("click", (e) => {
+            e.stopPropagation();
+            this.mark_note_as_completed(note, note_container);
+        });
+    }
+
+    update_edited_note(note_container, doc) {
+        frappe.ui.form.make_quick_entry(
+            "Project Note",
+            (note) => this.reload_note(note, note_container),
+            null,
+            doc
+        );
+    }
+
+    mark_note_as_completed(note, note_container) {
+        frappe.confirm(
+            "Are you sure you want to mark this note as completed?",
+            () => {
+                frappe.call({
+                    method: "india_compliance.project_dashboard.page.project_dashboard.project_dashboard.mark_note_as_completed",
+                    args: {
+                        note_name: note.name,
+                    },
+                    callback: function (res) {
+                        if (res.exc) return;
+                        note_container.remove();
+                    },
+                });
+            },
+            () => {
+                note_container.find(".custom-checkbox").prop("checked", false);
+            }
+        );
+    }
+
+    style_note(note, note_container) {
+        let fontColor = frappe.ui.color.get_contrast_color(note.color);
+        note_container.css("background-color", note.color);
+        note_container.css("color", fontColor);
+    }
+
+    get_note_container(note, prepend) {
+        if (prepend)
+            this.container.prepend(
+                frappe.render_template("note_card", { note: note })
+            );
+        else
+            this.container.append(
+                frappe.render_template("note_card", { note: note })
+            );
+
+        return this.container.find(`#${note.name}`);
+    }
+
+    reload_note(note, note_container) {
+        this.style_note(note, note_container);
+        note_container.find(".note-header").text(note.title);
+        note_container.find(".note-description").text(note.notes);
+        // this.setup_note_actions(note, note_container);
+    }
+
+    setup_actions() {
+        let me = this;
+        $("#add-note").on("click", () => {
+            frappe.ui.form.make_quick_entry(
+                "Project Note",
+                (note) => {
+                    this.create_note(note, true);
+                    me.notes.push(note);
                 },
-                () => {
-                    note_checkbox.checked = false;
+                (d) => {
+                    d.set_value("project", me.project);
                 }
             );
         });
     }
-    set_note_on_click_listener(note) {
-        let note_container = document.getElementById(note.name);
-        let note_content_container = note_container.querySelector(".note-content");
-
-        note_content_container.addEventListener("click", () => {
-            frappe.db.get_doc("Project Note", note.name).then(doc => {
-                frappe.ui.form.make_quick_entry(
-                    "Project Note",
-                    note => {
-                        const titleElement =
-                            note_container.querySelector(".task-header.strong");
-                        const descriptionElement = note_container.querySelector(
-                            ".task-title.note-description"
-                        );
-                        let brightness = this.calculateBrightness(note.color);
-                        let fontColor = brightness > 128 ? "#000000" : "#FFFFFF";
-                        titleElement.textContent = note.title;
-                        descriptionElement.textContent = note.notes;
-                        note_container.style.backgroundColor = note.color;
-                        note_container.style.color = fontColor;
-                    },
-                    null,
-                    doc
-                );
-            });
-        });
-    }
-    setup_actions() {
-        let me = this;
-        $("#add-note").on("click", () => {
-            frappe.ui.form.make_quick_entry("Project Note", note => {
-                this.create_note(note);
-                me.notes.push(note);
-            });
-        });
-    }
 };
-
-function toggleIcon() {
-    var sortIcon = document.getElementById(`sortIcon`);
-    var currentIcon = sortIcon.getAttribute("href");
-    if (currentIcon === "#icon-sort-ascending") {
-        sortIcon.setAttribute("href", "#icon-sort-descending");
-    } else {
-        sortIcon.setAttribute("href", "#icon-sort-ascending");
-    }
-}
-
-function selectOption(option) {
-    var option_field = document.getElementById(`selectedOption`);
-    option_field.textContent = option;
-    console.log(option);
-}
-
-function changeStatus(task_name) {
-    console.log(task_name);
-}

@@ -1,9 +1,9 @@
-<div class="kanban-card mb-3 col-md-12" id="{{task.name}}" onclick="changeStatus(`{{task.name}}`)">
+<div class="kanban-card mb-3 col-md-12" id="{{task.name}}" data-priority="{{task.priority_number}}" data-deadline="{{task.expected_end_date}}">
     <div class="container task-header">
         <div class="row">
             <div class="text-left">
                 {% if task.priority %}
-                <span style="color: {{task.priorityColour}};">
+                <span style="color: {{task.priority_colour}};">
                     <i class="fa fa-flag"></i>
                     {{task.priority}}
                 </span>
@@ -18,12 +18,12 @@
                 {% endif %}
             </div>
             <div class="text-right">
-                <button class="btn btn-secondary btn-sm" onclick="changeStatus(`{{task.name}}`)">
-                    {% if task.nextAction == "Done" %}
+                <button class="btn btn-secondary btn-sm" id="{{task.name}}" data-next-action="{{task.next_action}}">
+                    {% if task.next_action == "Done" %}
                     <i class="fa fa-check-circle"></i>
                     {% else %}
                     <i class="fa fa-plus"></i>
-                    {% endif %} &nbsp; {{task.nextAction}}
+                    {% endif %} &nbsp; {{task.next_action}}
                 </button>
             </div>
         </div>
@@ -33,13 +33,13 @@
     <div class="container task-footer text-muted">
         <div class="row">
             <div class="text-left">
-                {% if task.createdSince %}
-                {{task.createdSince}}
+                {% if task.created_since %}
+                {{task.created_since}}
                 {% endif %}
             </div>
             <div class="text-right">
-                {% if task.expected_end_date %}
-                <span> Due: {{task.expected_end_date}} </span>
+                {% if task.deadline %}
+                <span> Due: {{task.deadline}} </span>
                 {% endif %}
             </div>
         </div>

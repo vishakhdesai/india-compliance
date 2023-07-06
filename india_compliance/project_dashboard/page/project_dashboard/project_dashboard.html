@@ -1,53 +1,5 @@
 <div class="row assigned-tasks">
     <div class="frappe-card chart-column-container col-md-12">
-        <div class="title-area">
-            <h4 class="card-title">{%=__("Assigned Tasks") %}</h4>
-            <div class="card-options assigned-tasks"></div>
-            <div class="text-right text-muted">
-                <div class="btn-group">
-                    <button
-                        class="btn btn-default btn-sm btn-order"
-                        data-value="desc"
-                        title="descending"
-                        onclick="toggleIcon()"
-                    >
-                        <span class="sort-order">
-                            <svg class="icon icon-sm">
-                                <use id="sortIcon" href="#icon-sort-ascending"></use>
-                            </svg>
-                        </span>
-                    </button>
-                    <button
-                        type="button"
-                        class="btn btn-default btn-sm sort-selector-button"
-                        data-toggle="dropdown"
-                        aria-expanded="false"
-                    >
-                        <span class="dropdown-text" id="selectedOption">Deadline</span>
-                        <ul class="dropdown-menu dropdown-menu-right">
-                            <li>
-                                <a
-                                    class="dropdown-item option"
-                                    data-value="modified"
-                                    onclick="selectOption(`Deadline`)"
-                                >
-                                    Deadline
-                                </a>
-                            </li>
-                            <li>
-                                <a
-                                    class="dropdown-item option"
-                                    data-value="modified"
-                                    onclick="selectOption(`Priority`)"
-                                >
-                                    Priority
-                                </a>
-                            </li>
-                        </ul>
-                    </button>
-                </div>
-            </div>
-        </div>
         <div class="row-wrapper container"></div>
     </div>
 </div>
@@ -75,15 +27,19 @@
     </div>
 </div>
 <div class="row project-charts hidden">
-    <div class="frappe-card chart-column-container project-charts col-md-8"></div>
-    <div class="frappe-card chart-column-container project-charts col-md-4"></div>
+    <div
+        class="frappe-card chart-column-container project-charts col-md-8"
+    ></div>
+    <div
+        class="frappe-card chart-column-container project-charts col-md-4"
+    ></div>
 </div>
-<div class="row project-notes" id="notes">
+<div class="row project-notes">
     <div class="frappe-card chart-column-container col-md-12">
         <div class="title-area">
             <h4 class="card-title">{%=__("Notes") %}</h4>
             <div class="card-options project-notes">
-                <button type="button" class="btn btn-secondary btn-block" id="add-note">
+                <button type="button" class="btn btn-secondary btn-sm" id="add-note">
                     + Add Note
                 </button>
             </div>

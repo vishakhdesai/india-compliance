@@ -1,16 +1,20 @@
 {
  "content": null,
- "creation": "2023-07-03 11:14:39.544250",
+ "creation": "2023-06-28 04:58:53.294900",
  "docstatus": 0,
  "doctype": "Page",
  "idx": 0,
- "modified": "2023-07-03 11:16:19.161304",
+ "modified": "2023-06-28 05:02:08.767855",
  "modified_by": "Administrator",
- "module": "Project Dashboard",
+ "module": "Stride Projects",
  "name": "project-dashboard",
  "owner": "Administrator",
  "page_name": "project-dashboard",
- "roles": [],
+ "roles": [
+  {
+   "role": "System Manager"
+  }
+ ],
  "script": null,
  "standard": "Yes",
  "style": null,
