@@ -973,29 +973,34 @@ stride_projects.TableWidget = class TableWidget {
 
         let tbody = document.createElement("tbody");
 
-        this.data.forEach(teamMember => {
+        this.data.forEach(data_row => {
             let row = document.createElement("tr");
 
             // Render image component in the first column
-            let imageComponentCell = document.createElement("td");
-            imageComponentCell.innerHTML = this.render_image_component(
-                teamMember.image_component.image_url,
-                teamMember.image_component.title,
-                teamMember.image_component.subtitle
-            );
-            row.appendChild(imageComponentCell);
+            if (this.includeImageComponent) {
+                let imageComponentCell = document.createElement("td");
+                imageComponentCell.innerHTML = this.render_image_component(
+                    data_row.image_component.image_url,
+                    data_row.image_component.title,
+                    data_row.image_component.subtitle
+                );
+                row.appendChild(imageComponentCell);
+            }
 
             // Render other columns
             columnNames.forEach(columnName => {
                 if (columnName !== "image_component" && columnName !== "details") {
                     let cell = document.createElement("td");
-                    if (this.indicator_pill && columnName == this.indicator_pill.field_name) {
+                    if (
+                        this.indicator_pill &&
+                        columnName == this.indicator_pill.field_name
+                    ) {
                         cell.innerHTML = this.render_indicator_pill(
-                            teamMember[columnName],
-                            this.indicator_pill.valueColorMap[teamMember[columnName]]
+                            data_row[columnName],
+                            this.indicator_pill.valueColorMap[data_row[columnName]]
                         );
                     } else {
-                        cell.textContent = teamMember[columnName];
+                        cell.textContent = data_row[columnName];
                     }
                     row.appendChild(cell);
                 }
@@ -1004,8 +1009,8 @@ stride_projects.TableWidget = class TableWidget {
             // Render collapse button and details
             if (
                 this.includeCollapseButton &&
-                teamMember.details &&
-                teamMember.details.length > 0
+                data_row.details &&
+                data_row.details.length > 0
             ) {
                 let collapseCell = document.createElement("td");
                 let collapseButton = document.createElement("button");
@@ -1013,22 +1018,25 @@ stride_projects.TableWidget = class TableWidget {
                 collapseButton.setAttribute("data-toggle", "collapse");
                 collapseButton.setAttribute(
                     "data-target",
-                    `#collapse-${teamMember.image_component.title}-${teamMember.image_component.subtitle}`
+                    `#collapse-${data_row.image_component.title}-${data_row.image_component.subtitle}`
                 );
                 collapseButton.textContent = "Show Details";
                 collapseCell.appendChild(collapseButton);
                 row.appendChild(collapseCell);
-                teamMember.details.forEach(detail => {
+                data_row.details.forEach(detail => {
                     let detailRow = document.createElement("tr");
                     detailRow.className = "collapse";
-                    detailRow.id = `collapse-${teamMember.image_component.title}-${teamMember.image_component.subtitle}`;
+                    detailRow.id = `collapse-${data_row.image_component.title}-${data_row.image_component.subtitle}`;
                     columnNames.forEach(columnName => {
                         let detailCell = document.createElement("td");
-                        if (this.indicator_pill && columnName == this.indicator_pill.field_name){
+                        if (
+                            this.indicator_pill &&
+                            columnName == this.indicator_pill.field_name
+                        ) {
                             detailCell.innerHTML = this.render_indicator_pill(
                                 detail[columnName],
                                 this.indicator_pill.valueColorMap[detail[columnName]]
-                            )
+                            );
                         } else {
                             detailCell.textContent = detail[columnName];
                         }
