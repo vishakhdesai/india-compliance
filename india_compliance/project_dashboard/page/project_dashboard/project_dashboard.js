@@ -49,6 +49,11 @@ stride_projects.EmployeeProjectDashboard = class EmployeeProjectDashboard {
         this.render_main_section();
     }
 
+    go_to_section(elementId) {
+        const targetElement = document.getElementById(elementId);
+        targetElement.scrollIntoView({ behavior: "smooth" });
+    }
+
     setup_header() {
         this.page.set_title(__(this.page.title));
         this.setup_actions();
@@ -62,15 +67,23 @@ stride_projects.EmployeeProjectDashboard = class EmployeeProjectDashboard {
                 designation: "UX Designer",
             })
         );
+        $("#sidebar-notes").on("click", () => {
+            this.go_to_section("notes");
+        });
+        $("#sidebar-assigned-tasks").on("click", () => {
+            this.go_to_section("assigned-tasks");
+        });
     }
 
     render_main_section() {
+        this.main_section.empty();
         this.main_section.append(frappe.render_template("project_dashboard"));
         this.render_assigned_tasks();
         this.get_project_overview_html();
         this.get_project_info_html();
         this.get_chart_widgets();
         this.render_project_notes();
+        this.render_table();
     }
 
     setup_actions() {
@@ -94,12 +107,7 @@ stride_projects.EmployeeProjectDashboard = class EmployeeProjectDashboard {
         this.page.add_inner_button(
             __("Adhoc Task"),
             () => {
-                new stride_projects.TaskQuickEntry(
-                    "",
-                    "",
-                    () => this.reload(),
-                    true
-                );
+                new stride_projects.TaskQuickEntry("", "", () => this.reload(), true);
             },
             __("Create")
         );
@@ -160,7 +168,7 @@ stride_projects.EmployeeProjectDashboard = class EmployeeProjectDashboard {
     }
 
     render_assigned_tasks() {
-        this._fetch_tasks((tasks) => {
+        this._fetch_tasks(tasks => {
             this._handle_task_widget(tasks);
         });
     }
@@ -310,7 +318,7 @@ stride_projects.EmployeeProjectDashboard = class EmployeeProjectDashboard {
             },
         ];
 
-        charts.forEach((chart) => {
+        charts.forEach(chart => {
             let widget = frappe.widget.make_widget({
                 ...chart,
                 label: chart.chart_name,
@@ -327,7 +335,7 @@ stride_projects.EmployeeProjectDashboard = class EmployeeProjectDashboard {
     }
 
     refresh_chart_widgets() {
-        this.chart_widget_list.forEach((widget) => {
+        this.chart_widget_list.forEach(widget => {
             if (!this.project) delete widget.filters.project;
             else widget.filters.project = this.project;
 
@@ -357,7 +365,158 @@ stride_projects.EmployeeProjectDashboard = class EmployeeProjectDashboard {
         });
     }
 
+    render_table() {
+        const me = this;
+        let team_members = [
+            {
+                fname: "John",
+                lname: "Doe",
+                image_url: "https://randomuser.me/api/portraits/men/1.jpg",
+                allocated_project: 3,
+                planned: "2 weeks",
+                planned_days: "14",
+                actual_days: "10",
+                status: "On Track",
+                details: [
+                    {
+                        allocated_project: "Project A",
+                        planned: "1 week",
+                        planned_days: "7",
+                        actual_days: "5",
+                        status: "On Track",
+                    },
+                    {
+                        allocated_project: "Project B",
+                        planned: "1 week",
+                        planned_days: "7",
+                        actual_days: "5",
+                        status: "On Track",
+                    },
+                    {
+                        allocated_project: "Project C",
+                        planned: "1 week",
+                        planned_days: "7",
+                        actual_days: "5",
+                        status: "On Track",
+                    },
+                ],
+            },
+            {
+                fname: "Jane",
+                lname: "Smith",
+                image_url: "https://randomuser.me/api/portraits/women/2.jpg",
+                allocated_project: 2,
+                planned: "3 weeks",
+                planned_days: "21",
+                actual_days: "18",
+                status: "On Track",
+                details: [
+                    {
+                        allocated_project: "Project D",
+                        planned: "2 weeks",
+                        planned_days: "14",
+                        actual_days: "12",
+                        status: "On Track",
+                    },
+                    {
+                        allocated_project: "Project E",
+                        planned: "1 week",
+                        planned_days: "7",
+                        actual_days: "6",
+                        status: "On Track",
+                    },
+                ],
+            },
+            {
+                fname: "Michael",
+                lname: "Johnson",
+                image_url: "https://randomuser.me/api/portraits/men/3.jpg",
+                allocated_project: 1,
+                planned: "1 week",
+                planned_days: "7",
+                actual_days: "6",
+                status: "On Track",
+                details: [
+                    {
+                        allocated_project: "Project F",
+                        planned: "1 week",
+                        planned_days: "7",
+                        actual_days: "6",
+                        status: "On Track",
+                    },
+                ],
+            },
+            {
+                fname: "Emily",
+                lname: "Williams",
+                image_url: "https://randomuser.me/api/portraits/women/4.jpg",
+                allocated_project: 4,
+                planned: "4 weeks",
+                planned_days: "28",
+                actual_days: "25",
+                status: "On Track",
+                details: [
+                    {
+                        allocated_project: "Project G",
+                        planned: "2 weeks",
+                        planned_days: "14",
+                        actual_days: "12",
+                        status: "On Track",
+                    },
+                    {
+                        allocated_project: "Project H",
+                        planned: "1 week",
+                        planned_days: "7",
+                        actual_days: "6",
+                        status: "On Track",
+                    },
+                    {
+                        allocated_project: "Project I",
+                        planned: "1 week",
+                        planned_days: "7",
+                        actual_days: "6",
+                        status: "On Track",
+                    },
+                ],
+            },
+        ];
+        let data = team_members.map(({ fname, lname, image_url, ...rest }) => {
+            let imageComponent = {
+                title: fname,
+                subtitle: lname,
+                image_url: image_url,
+            };
+            return { image_component: imageComponent, ...rest };
+        });
+        const columnNames = {
+            image_component: "Team Memeber",
+            allocated_project: "Allocated Projects",
+            planned: "Planned Duration",
+            planned_days: "Planned Days",
+            actual_days: "Actual Days",
+            status: "Status",
+            details: "Details",
+        };
+        me.TableWidget = new stride_projects.TableWidget({
+            container: me.wrapper.find(
+                ".project-time-table .time-table-wrapper.project-time-table"
+            ),
+            data: data,
+            columnNamesMap: columnNames,
+            includeImageComponent: true,
+            includeCollapseButton: true,
+            indicator_pill: {
+                field_name: "status",
+                valueColorMap: {
+                    "On Track": "green",
+                    "Off Track": "red"
+                }
+            }
+        });
+    }
+
     reload() {
+        debugger;
         this.get_project_overview_html();
         this.get_project_info_html();
         this.refresh_chart_widgets();
@@ -410,7 +569,7 @@ stride_projects.TasksWidget = class TasksWidget {
     }
 
     initialize_task_columns_and_sort_them() {
-        this.columns.forEach((column) => {
+        this.columns.forEach(column => {
             this.columns_list.push(
                 new stride_projects.TaskColumn({
                     container: this.column_container,
@@ -422,12 +581,10 @@ stride_projects.TasksWidget = class TasksWidget {
     }
 
     process_all_tasks() {
-        this.tasks.forEach((task) => {
+        this.tasks.forEach(task => {
             Object.assign(task, {
                 created_since: frappe.datetime.comment_when(task.creation),
-                expected_time_formatted: this.format_expected_time(
-                    task.expected_time
-                ),
+                expected_time_formatted: this.format_expected_time(task.expected_time),
                 priority_colour: this.get_priority_colour(task.priority),
                 priority_number: this.get_priority_number(task.priority),
                 deadline: frappe.datetime.str_to_user(task.expected_end_date),
@@ -480,7 +637,7 @@ stride_projects.TasksWidget = class TasksWidget {
 
     sort_tasks() {
         const { sort_by, sort_order } = this._get_sort_options();
-        this.columns_list.forEach((column) => {
+        this.columns_list.forEach(column => {
             column.sort_tasks(sort_by, sort_order, this.sort_selector);
         });
     }
@@ -496,9 +653,7 @@ stride_projects.TasksWidget = class TasksWidget {
 
         let sort_by;
         this.container
-            .find(
-                ".sort-selector .sort-selector-button .dropdown-menu .dropdown-item"
-            )
+            .find(".sort-selector .sort-selector-button .dropdown-menu .dropdown-item")
             .each(function () {
                 if ($(this).text().trim() === selectedText)
                     sort_by = $(this).attr("data-value");
@@ -538,7 +693,7 @@ stride_projects.TaskColumn = class TaskColumn {
     show() {
         this.append_task_column();
         const column_container = this.get_column_container().empty();
-        this.tasks.forEach((task) =>
+        this.tasks.forEach(task =>
             this.push_new_task_card({ container: column_container, task })
         );
     }
@@ -579,7 +734,7 @@ stride_projects.TaskColumn = class TaskColumn {
 
     sort_tasks(sort_by, order, sort_selector) {
         const field = sort_selector.args.options.find(
-            (option) => option.fieldname === sort_by
+            option => option.fieldname === sort_by
         );
         const is_date = field.fieldtype === "Date";
         const attribute = field.data_attribute;
@@ -612,14 +767,14 @@ stride_projects.TaskColumn = class TaskColumn {
     setup_actions() {
         const container = this.get_column_container();
 
-        container.find(".kanban-card").on("click", (e) => {
+        container.find(".kanban-card").on("click", e => {
             const task_name = e.currentTarget.id;
             new stride_projects.TaskQuickEdit(task_name, () =>
                 stride_projects.employee_project_dashboard.reload()
             );
         });
 
-        container.find(".kanban-card .btn").on("click", (e) => {
+        container.find(".kanban-card .btn").on("click", e => {
             e.stopPropagation();
             const task_name = e.currentTarget.id;
             const next_action = e.currentTarget.dataset.nextAction;
@@ -667,7 +822,7 @@ stride_projects.NotesWidget = class NotesWidget {
     }
 
     show() {
-        this.notes.forEach((note) => {
+        this.notes.forEach(note => {
             this.create_note(note);
         });
     }
@@ -680,12 +835,12 @@ stride_projects.NotesWidget = class NotesWidget {
 
     setup_note_actions(note, note_container) {
         note_container.on("click", () => {
-            frappe.db.get_doc("Project Note", note.name).then((doc) => {
+            frappe.db.get_doc("Project Note", note.name).then(doc => {
                 this.update_edited_note(note_container, doc);
             });
         });
 
-        note_container.find(".custom-checkbox").on("click", (e) => {
+        note_container.find(".custom-checkbox").on("click", e => {
             e.stopPropagation();
             this.mark_note_as_completed(note, note_container);
         });
@@ -694,7 +849,7 @@ stride_projects.NotesWidget = class NotesWidget {
     update_edited_note(note_container, doc) {
         frappe.ui.form.make_quick_entry(
             "Project Note",
-            (note) => this.reload_note(note, note_container),
+            note => this.reload_note(note, note_container),
             null,
             doc
         );
@@ -729,13 +884,8 @@ stride_projects.NotesWidget = class NotesWidget {
 
     get_note_container(note, prepend) {
         if (prepend)
-            this.container.prepend(
-                frappe.render_template("note_card", { note: note })
-            );
-        else
-            this.container.append(
-                frappe.render_template("note_card", { note: note })
-            );
+            this.container.prepend(frappe.render_template("note_card", { note: note }));
+        else this.container.append(frappe.render_template("note_card", { note: note }));
 
         return this.container.find(`#${note.name}`);
     }
@@ -752,14 +902,152 @@ stride_projects.NotesWidget = class NotesWidget {
         $("#add-note").on("click", () => {
             frappe.ui.form.make_quick_entry(
                 "Project Note",
-                (note) => {
+                note => {
                     this.create_note(note, true);
                     me.notes.push(note);
                 },
-                (d) => {
+                d => {
                     d.set_value("project", me.project);
                 }
             );
         });
+    }
+};
+
+stride_projects.TableWidget = class TableWidget {
+    constructor(opts) {
+        $.extend(this, opts);
+        this.container = this.container.empty();
+        this.table_id = "dynamic-table";
+        this.show();
+    }
+
+    render_image_component(image_url, fname, lname) {
+        return `
+          <td>
+            <table>
+              <tr>
+                <td>
+                  <img src="${image_url}" class="rounded-circle" alt="Person Image" width="50" height="50">
+                </td>
+                <td style="font-size: larger">
+                  ${fname} <br> ${lname}
+                </td>
+              </tr>
+            </table>
+          </td>
+        `;
+    }
+    render_table_skeleton(table_id) {
+        return `
+          <div class="container">
+            <table id="${table_id}" class="table">
+            </table>
+          </div>
+        `;
+    }
+    getColumnNames() {
+        const firstObject = this.data[0];
+        const columnNames = Object.keys(firstObject);
+
+        return columnNames;
+    }
+    show() {
+        let columnNames = this.getColumnNames();
+
+        this.container.append(this.render_table_skeleton(this.table_id));
+
+        let table = document.getElementById(this.table_id);
+
+        let thead = document.createElement("thead");
+        let headerRow = document.createElement("tr");
+
+        columnNames.forEach(columnName => {
+            let th = document.createElement("th");
+            th.textContent = this.columnNamesMap[columnName];
+            headerRow.appendChild(th);
+        });
+
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        let tbody = document.createElement("tbody");
+
+        this.data.forEach(teamMember => {
+            let row = document.createElement("tr");
+
+            // Render image component in the first column
+            let imageComponentCell = document.createElement("td");
+            imageComponentCell.innerHTML = this.render_image_component(
+                teamMember.image_component.image_url,
+                teamMember.image_component.title,
+                teamMember.image_component.subtitle
+            );
+            row.appendChild(imageComponentCell);
+
+            // Render other columns
+            columnNames.forEach(columnName => {
+                if (columnName !== "image_component" && columnName !== "details") {
+                    let cell = document.createElement("td");
+                    if (this.indicator_pill && columnName == this.indicator_pill.field_name) {
+                        cell.innerHTML = this.render_indicator_pill(
+                            teamMember[columnName],
+                            this.indicator_pill.valueColorMap[teamMember[columnName]]
+                        );
+                    } else {
+                        cell.textContent = teamMember[columnName];
+                    }
+                    row.appendChild(cell);
+                }
+            });
+            let detailRows = [];
+            // Render collapse button and details
+            if (
+                this.includeCollapseButton &&
+                teamMember.details &&
+                teamMember.details.length > 0
+            ) {
+                let collapseCell = document.createElement("td");
+                let collapseButton = document.createElement("button");
+                collapseButton.className = "btn btn-primary";
+                collapseButton.setAttribute("data-toggle", "collapse");
+                collapseButton.setAttribute(
+                    "data-target",
+                    `#collapse-${teamMember.image_component.title}-${teamMember.image_component.subtitle}`
+                );
+                collapseButton.textContent = "Show Details";
+                collapseCell.appendChild(collapseButton);
+                row.appendChild(collapseCell);
+                teamMember.details.forEach(detail => {
+                    let detailRow = document.createElement("tr");
+                    detailRow.className = "collapse";
+                    detailRow.id = `collapse-${teamMember.image_component.title}-${teamMember.image_component.subtitle}`;
+                    columnNames.forEach(columnName => {
+                        let detailCell = document.createElement("td");
+                        if (this.indicator_pill && columnName == this.indicator_pill.field_name){
+                            detailCell.innerHTML = this.render_indicator_pill(
+                                detail[columnName],
+                                this.indicator_pill.valueColorMap[detail[columnName]]
+                            )
+                        } else {
+                            detailCell.textContent = detail[columnName];
+                        }
+                        detailRow.appendChild(detailCell);
+                    });
+                    detailRows.push(detailRow);
+                });
+            }
+
+            tbody.appendChild(row);
+            detailRows.forEach(detailRow => {
+                tbody.appendChild(detailRow);
+            });
+        });
+
+        table.appendChild(tbody);
+    }
+
+    render_indicator_pill(text, color) {
+        return `<span class="indicator-pill whitespace-nowrap ${color}"><span>${text}</span></span>`;
     }
 };
