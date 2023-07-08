@@ -390,7 +390,7 @@ stride_projects.EmployeeProjectDashboard = class EmployeeProjectDashboard {
                         planned: "1 week",
                         planned_days: "7",
                         actual_days: "5",
-                        status: "On Track",
+                        status: "Off Track",
                     },
                     {
                         allocated_project: "Project C",
@@ -423,7 +423,7 @@ stride_projects.EmployeeProjectDashboard = class EmployeeProjectDashboard {
                         planned: "1 week",
                         planned_days: "7",
                         actual_days: "6",
-                        status: "On Track",
+                        status: "Off Track",
                     },
                 ],
             },
@@ -442,7 +442,7 @@ stride_projects.EmployeeProjectDashboard = class EmployeeProjectDashboard {
                         planned: "1 week",
                         planned_days: "7",
                         actual_days: "6",
-                        status: "On Track",
+                        status: "Off Track",
                     },
                 ],
             },
@@ -468,7 +468,7 @@ stride_projects.EmployeeProjectDashboard = class EmployeeProjectDashboard {
                         planned: "1 week",
                         planned_days: "7",
                         actual_days: "6",
-                        status: "On Track",
+                        status: "Off Track",
                     },
                     {
                         allocated_project: "Project I",
@@ -509,9 +509,9 @@ stride_projects.EmployeeProjectDashboard = class EmployeeProjectDashboard {
                 field_name: "status",
                 valueColorMap: {
                     "On Track": "green",
-                    "Off Track": "red"
-                }
-            }
+                    "Off Track": "red",
+                },
+            },
         });
     }
 
@@ -922,26 +922,30 @@ stride_projects.TableWidget = class TableWidget {
         this.show();
     }
 
-    render_image_component(image_url, fname, lname) {
+    render_image_component(image_url, title, subtitle) {
         return `
           <td>
-            <table>
-              <tr>
-                <td>
-                  <img src="${image_url}" class="rounded-circle" alt="Person Image" width="50" height="50">
-                </td>
-                <td style="font-size: larger">
-                  ${fname} <br> ${lname}
-                </td>
-              </tr>
-            </table>
+            <div class="row">
+              <div class="col-auto">
+                <img src="${image_url}" class="rounded square" alt="Person Image" width="50" height="50">
+              </div>
+              <div class="col">
+                <div class="row">
+                  <div class="col" style="font-size: larger">${title}</div>
+                </div>
+                <div class="row text-muted">
+                  <div class="col">${subtitle}</div>
+                </div>
+              </div>
+            </div>
           </td>
         `;
     }
+
     render_table_skeleton(table_id) {
         return `
           <div class="container">
-            <table id="${table_id}" class="table">
+            <table id="${table_id}" class="table table-borderless">
             </table>
           </div>
         `;
@@ -964,6 +968,7 @@ stride_projects.TableWidget = class TableWidget {
 
         columnNames.forEach(columnName => {
             let th = document.createElement("th");
+            th.className = "text-muted";
             th.textContent = this.columnNamesMap[columnName];
             headerRow.appendChild(th);
         });
