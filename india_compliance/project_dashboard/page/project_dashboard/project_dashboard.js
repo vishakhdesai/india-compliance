@@ -503,8 +503,8 @@ stride_projects.EmployeeProjectDashboard = class EmployeeProjectDashboard {
             ),
             data: data,
             columnNamesMap: columnNames,
-            includeImageComponent: true,
-            includeCollapseButton: true,
+            imageComponents: ["image_component"], //array of field names with image components
+            includeCollapseButton: true, //for accordian
             indicator_pill: {
                 field_name: "status",
                 valueColorMap: {
@@ -981,71 +981,33 @@ stride_projects.TableWidget = class TableWidget {
         this.data.forEach(data_row => {
             let row = document.createElement("tr");
 
-            // Render image component in the first column
-            if (this.includeImageComponent) {
-                let imageComponentCell = document.createElement("td");
-                imageComponentCell.innerHTML = this.render_image_component(
-                    data_row.image_component.image_url,
-                    data_row.image_component.title,
-                    data_row.image_component.subtitle
-                );
-                row.appendChild(imageComponentCell);
-            }
-
-            // Render other columns
             columnNames.forEach(columnName => {
-                if (columnName !== "image_component" && columnName !== "details") {
-                    let cell = document.createElement("td");
-                    if (
-                        this.indicator_pill &&
-                        columnName == this.indicator_pill.field_name
-                    ) {
-                        cell.innerHTML = this.render_indicator_pill(
-                            data_row[columnName],
-                            this.indicator_pill.valueColorMap[data_row[columnName]]
-                        );
-                    } else {
-                        cell.textContent = data_row[columnName];
-                    }
-                    row.appendChild(cell);
+                if (this.imageComponents.length > 0 && this.imageComponents.includes(columnName)) {
+                    let imageComponentCell = document.createElement("td");
+                    imageComponentCell.innerHTML = this.render_image_component(
+                        data_row.image_component.image_url,
+                        data_row.image_component.title,
+                        data_row.image_component.subtitle
+                    );
+                    row.appendChild(imageComponentCell);
+                }
+                else if (columnName !== "details") {
+                    this.set_cell_data(columnName, data_row, row);
                 }
             });
             let detailRows = [];
-            // Render collapse button and details
             if (
                 this.includeCollapseButton &&
                 data_row.details &&
                 data_row.details.length > 0
             ) {
-                let collapseCell = document.createElement("td");
-                let collapseButton = document.createElement("button");
-                collapseButton.className = "btn btn-primary";
-                collapseButton.setAttribute("data-toggle", "collapse");
-                collapseButton.setAttribute(
-                    "data-target",
-                    `#collapse-${data_row.image_component.title}-${data_row.image_component.subtitle}`
-                );
-                collapseButton.textContent = "Show Details";
-                collapseCell.appendChild(collapseButton);
-                row.appendChild(collapseCell);
+                this.create_collapse_button(data_row, row);
                 data_row.details.forEach(detail => {
                     let detailRow = document.createElement("tr");
                     detailRow.className = "collapse";
                     detailRow.id = `collapse-${data_row.image_component.title}-${data_row.image_component.subtitle}`;
                     columnNames.forEach(columnName => {
-                        let detailCell = document.createElement("td");
-                        if (
-                            this.indicator_pill &&
-                            columnName == this.indicator_pill.field_name
-                        ) {
-                            detailCell.innerHTML = this.render_indicator_pill(
-                                detail[columnName],
-                                this.indicator_pill.valueColorMap[detail[columnName]]
-                            );
-                        } else {
-                            detailCell.textContent = detail[columnName];
-                        }
-                        detailRow.appendChild(detailCell);
+                        this.set_cell_data(columnName, detail, detailRow);
                     });
                     detailRows.push(detailRow);
                 });
@@ -1058,6 +1020,34 @@ stride_projects.TableWidget = class TableWidget {
         });
 
         table.appendChild(tbody);
+    }
+
+    create_collapse_button(data_row, row) {
+        let collapseCell = document.createElement("td");
+        let collapseButton = document.createElement("button");
+        collapseButton.className = "btn btn-primary";
+        collapseButton.setAttribute("data-toggle", "collapse");
+        collapseButton.setAttribute(
+            "data-target",
+            `#collapse-${data_row.image_component.title}-${data_row.image_component.subtitle}`
+        );
+        collapseButton.textContent = "Show Details";
+        collapseCell.appendChild(collapseButton);
+        row.appendChild(collapseCell);
+    }
+
+    set_cell_data(columnName, data_row, row) {
+        let cell = document.createElement("td");
+        if (this.indicator_pill &&
+            columnName == this.indicator_pill.field_name) {
+            cell.innerHTML = this.render_indicator_pill(
+                data_row[columnName],
+                this.indicator_pill.valueColorMap[data_row[columnName]]
+            );
+        } else {
+            cell.textContent = data_row[columnName];
+        }
+        row.appendChild(cell);
     }
 
     render_indicator_pill(text, color) {
