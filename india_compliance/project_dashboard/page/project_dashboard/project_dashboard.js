@@ -527,8 +527,8 @@ stride_projects.EmployeeProjectDashboard = class EmployeeProjectDashboard {
                 },
             },
             progress_bar: {
-                fields: ["progress"]
-            }
+                fields: ["progress"],
+            },
         });
     }
 
@@ -972,26 +972,6 @@ stride_projects.TableWidget = class TableWidget {
         this.show();
     }
 
-    render_image_component(image_url, title, subtitle) {
-        return `
-          <td>
-            <div class="row">
-              <div class="col-auto">
-                <img src="${image_url}" class="rounded square" alt="Person Image" width="50" height="50">
-              </div>
-              <div class="col">
-                <div class="row">
-                  <div class="col" style="font-size: larger">${title}</div>
-                </div>
-                <div class="row text-muted">
-                  <div class="col">${subtitle}</div>
-                </div>
-              </div>
-            </div>
-          </td>
-        `;
-    }
-
     render_table_skeleton(table_id) {
         return `
           <div class="container">
@@ -1018,7 +998,7 @@ stride_projects.TableWidget = class TableWidget {
 
         columnNames.forEach(columnName => {
             let th = document.createElement("th");
-            th.className = "text-muted";
+            th.classList.add("text-muted", "text-center", "align-middle");
             th.textContent = this.columnNamesMap[columnName];
             headerRow.appendChild(th);
         });
@@ -1046,11 +1026,6 @@ stride_projects.TableWidget = class TableWidget {
                             data_row.image_component.label +
                             data_row.image_component.sublabel,
                     });
-                    // avatarCell.innerHTML = this.render_image_component(
-                    //     data_row.image_component.image_url,
-                    //     data_row.image_component.label,
-                    //     data_row.image_component.sublabel
-                    // );
                     row.appendChild(avatarCell);
                 } else if (columnName !== "details") {
                     this.set_cell_data(columnName, data_row, row);
@@ -1086,6 +1061,7 @@ stride_projects.TableWidget = class TableWidget {
 
     create_collapse_button(data_row, row) {
         let collapseCell = document.createElement("td");
+        collapseCell.classList.add("align-middle", "text-center");
         let collapseButton = document.createElement("button");
         collapseButton.className = "btn btn-primary";
         collapseButton.setAttribute("type", "button");
@@ -1101,12 +1077,17 @@ stride_projects.TableWidget = class TableWidget {
 
     set_cell_data(columnName, data_row, row) {
         let cell = document.createElement("td");
-        if (this.indicator_pill && columnName == this.indicator_pill.field_name) {
+        cell.classList.add("align-middle", "text-center");
+
+        if (this.indicator_pill && columnName === this.indicator_pill.field_name) {
             cell.innerHTML = this.render_indicator_pill(
                 data_row[columnName],
                 this.indicator_pill.valueColorMap[data_row[columnName]]
             );
-        } else if (this.progress_bar.fields && this.progress_bar.fields.includes(columnName)) {
+        } else if (
+            this.progress_bar.fields &&
+            this.progress_bar.fields.includes(columnName)
+        ) {
             cell.innerHTML = this.render_progress_bar(
                 parseInt(data_row[columnName]),
                 "#161a1f52"
@@ -1114,6 +1095,7 @@ stride_projects.TableWidget = class TableWidget {
         } else {
             cell.textContent = data_row[columnName];
         }
+
         row.appendChild(cell);
     }
 
