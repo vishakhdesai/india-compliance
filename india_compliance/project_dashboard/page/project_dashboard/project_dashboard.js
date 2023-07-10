@@ -997,10 +997,12 @@ stride_projects.TableWidget = class TableWidget {
         let headerRow = document.createElement("tr");
 
         columnNames.forEach(columnName => {
-            let th = document.createElement("th");
-            th.classList.add("text-muted", "text-center", "align-middle");
-            th.textContent = this.columnNamesMap[columnName];
-            headerRow.appendChild(th);
+            if (!(this.includeCollapseButton && columnName == "details")) {
+                let th = document.createElement("th");
+                th.classList.add("text-muted", "text-center", "align-middle");
+                th.textContent = this.columnNamesMap[columnName];
+                headerRow.appendChild(th);
+            }
         });
 
         thead.appendChild(headerRow);
@@ -1042,7 +1044,7 @@ stride_projects.TableWidget = class TableWidget {
                     let detailRow = document.createElement("tr");
                     detailRow.style.backgroundColor = "#161a1f52";
                     detailRow.className = "collapse";
-                    detailRow.id = `collapse-${data_row.image_component.title}-${data_row.image_component.subtitle}`;
+                    detailRow.id = `collapse-${data_row.image_component.label}-${data_row.image_component.sublabel}`;
                     columnNames.forEach(columnName => {
                         this.set_cell_data(columnName, detail, detailRow);
                     });
@@ -1068,7 +1070,7 @@ stride_projects.TableWidget = class TableWidget {
         collapseButton.setAttribute("data-toggle", "collapse");
         collapseButton.setAttribute(
             "data-target",
-            `#collapse-${data_row.image_component.title}-${data_row.image_component.subtitle}`
+            `#collapse-${data_row.image_component.label}-${data_row.image_component.sublabel}`
         );
         collapseButton.textContent = "Show Details";
         collapseCell.appendChild(collapseButton);
