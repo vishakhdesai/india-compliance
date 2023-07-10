@@ -64,7 +64,8 @@
 	font-size: smaller;
 }
 
-.task-title, .note-content{
+.task-title,
+.note-content {
 	font-size: medium;
 }
 
@@ -96,7 +97,7 @@
 }
 
 .custom-checkbox {
-    transform: scale(1.5); 
+	transform: scale(1.5);
 }
 
 .user-profile-sidebar {
@@ -108,4 +109,14 @@
 
 .table-widget {
 	background-color: #161a1fcc;
+}
+
+.change-sign::after {
+	content: '+';
+	font-size: 2rem;
+}
+
+.change-sign.active::after {
+	content: '-';
+	font-size: 2rem;
 }

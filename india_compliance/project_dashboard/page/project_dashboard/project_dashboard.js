@@ -1079,14 +1079,19 @@ stride_projects.TableWidget = class TableWidget {
         let collapseCell = document.createElement("td");
         collapseCell.classList.add("align-middle", "text-center");
         let collapseButton = document.createElement("button");
-        collapseButton.className = "btn btn-primary";
+        collapseButton.className = "btn btn-secondary change-sign pr-3 pl-3 pt-0 pb-0";
+        collapseButton.style.background = "#161a1fcc";
         collapseButton.setAttribute("type", "button");
         collapseButton.setAttribute("data-toggle", "collapse");
         collapseButton.setAttribute(
             "data-target",
             `#collapse-${data_row.image_component.label}-${data_row.image_component.sublabel}`
         );
-        collapseButton.textContent = "Show Details";
+
+        collapseButton.addEventListener("click", function () {
+            collapseButton.classList.toggle("active");
+        });
+
         collapseCell.appendChild(collapseButton);
         row.appendChild(collapseCell);
     }
@@ -1101,7 +1106,8 @@ stride_projects.TableWidget = class TableWidget {
         ) {
             cell.innerHTML = this.render_indicator_pill(
                 data_row[columnName],
-                this.indicator_pill_fields[columnName].colors[data_row[columnName]] || "yellow"
+                this.indicator_pill_fields[columnName].colors[data_row[columnName]] ||
+                    "yellow"
             );
         } else if (
             this.progress_bar &&
