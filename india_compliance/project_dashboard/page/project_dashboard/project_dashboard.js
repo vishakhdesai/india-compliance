@@ -519,16 +519,29 @@ stride_projects.EmployeeProjectDashboard = class EmployeeProjectDashboard {
             columnNamesMap: columnNames,
             imageComponents: ["image_component"], //array of field names with image components
             includeCollapseButton: true, //for accordian
-            indicator_pill: {
-                field_name: "status",
-                valueColorMap: {
-                    "On Track": "green",
-                    "Off Track": "red",
+            indicator_pill_fields: {
+                status: {
+                    colors: {
+                        "On Track": "green",
+                        "Off Track": "red",
+                    },
                 },
+                // planned_days: {
+                //     colors: {
+                //         "10": "green",
+                //         "20": "red"
+                //     }
+                // }
             },
             progress_bar: {
                 fields: ["progress"],
             },
+            // icon_fields: {
+            //     progress: {
+            //         icon: "star",
+            //         colors: { 80: "green", 60: "red" },
+            //     },
+            // },
         });
     }
 
@@ -948,7 +961,7 @@ stride_projects.AvatarWidget = class AvatarWidget {
         );
         this.avatarCell.innerHTML = `
         <td>
-          <div class="row">
+          <div class="row pl-1">
             <div class="col-auto">
               ${avatar}
             </div>
@@ -1019,6 +1032,7 @@ stride_projects.TableWidget = class TableWidget {
                     this.imageComponents.includes(columnName)
                 ) {
                     let avatarCell = document.createElement("td");
+                    avatarCell.classList.add("align-middle", "text-center");
                     let avatarWidget = new stride_projects.AvatarWidget({
                         image_url: data_row.image_component.image_url,
                         label: data_row.image_component.label,
@@ -1081,18 +1095,31 @@ stride_projects.TableWidget = class TableWidget {
         let cell = document.createElement("td");
         cell.classList.add("align-middle", "text-center");
 
-        if (this.indicator_pill && columnName === this.indicator_pill.field_name) {
+        if (
+            this.indicator_pill_fields &&
+            Object.keys(this.indicator_pill_fields).includes(columnName)
+        ) {
             cell.innerHTML = this.render_indicator_pill(
                 data_row[columnName],
-                this.indicator_pill.valueColorMap[data_row[columnName]]
+                this.indicator_pill_fields[columnName].colors[data_row[columnName]] || "yellow"
             );
         } else if (
+            this.progress_bar &&
             this.progress_bar.fields &&
             this.progress_bar.fields.includes(columnName)
         ) {
             cell.innerHTML = this.render_progress_bar(
                 parseInt(data_row[columnName]),
                 "#161a1f52"
+            );
+        } else if (
+            this.icon_fields &&
+            Object.keys(this.icon_fields).includes(columnName)
+        ) {
+            cell.innerHTML = this.render_icon_text(
+                data_row[columnName],
+                this.icon_fields[columnName].icon,
+                this.icon_fields[columnName].colors[data_row[columnName]] || "yellow"
             );
         } else {
             cell.textContent = data_row[columnName];
@@ -1116,6 +1143,15 @@ stride_projects.TableWidget = class TableWidget {
             <div class="col-lg-4 p-0 text-center">
               <small>${progress}%</small>
             </div>
+          </div>
+        `;
+    }
+
+    render_icon_text(text, icon_name, color) {
+        return `
+          <div style="color: ${color}">
+            <i class="fa fa-${icon_name}"></i>
+            <span>${text}</span>
           </div>
         `;
     }
