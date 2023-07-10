@@ -98,3 +98,14 @@
 .custom-checkbox {
     transform: scale(1.5); 
 }
+
+.user-profile-sidebar {
+	position: fixed;
+	height: 100%;
+	overflow-y: auto;
+	width: 10%;
+}
+
+.table-widget {
+	background-color: #161a1fcc;
+}

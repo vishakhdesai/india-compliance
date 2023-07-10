@@ -377,6 +377,7 @@ stride_projects.EmployeeProjectDashboard = class EmployeeProjectDashboard {
                 planned_days: "14",
                 actual_days: "10",
                 status: "On Track",
+                progress: "60",
                 details: [
                     {
                         allocated_project: "Project A",
@@ -384,6 +385,7 @@ stride_projects.EmployeeProjectDashboard = class EmployeeProjectDashboard {
                         planned_days: "7",
                         actual_days: "5",
                         status: "On Track",
+                        progress: "80",
                     },
                     {
                         allocated_project: "Project B",
@@ -391,6 +393,7 @@ stride_projects.EmployeeProjectDashboard = class EmployeeProjectDashboard {
                         planned_days: "7",
                         actual_days: "5",
                         status: "Off Track",
+                        progress: "60",
                     },
                     {
                         allocated_project: "Project C",
@@ -398,6 +401,7 @@ stride_projects.EmployeeProjectDashboard = class EmployeeProjectDashboard {
                         planned_days: "7",
                         actual_days: "5",
                         status: "On Track",
+                        progress: "90",
                     },
                 ],
             },
@@ -410,6 +414,7 @@ stride_projects.EmployeeProjectDashboard = class EmployeeProjectDashboard {
                 planned_days: "21",
                 actual_days: "18",
                 status: "On Track",
+                progress: "90",
                 details: [
                     {
                         allocated_project: "Project D",
@@ -417,6 +422,7 @@ stride_projects.EmployeeProjectDashboard = class EmployeeProjectDashboard {
                         planned_days: "14",
                         actual_days: "12",
                         status: "On Track",
+                        progress: "70",
                     },
                     {
                         allocated_project: "Project E",
@@ -424,6 +430,7 @@ stride_projects.EmployeeProjectDashboard = class EmployeeProjectDashboard {
                         planned_days: "7",
                         actual_days: "6",
                         status: "Off Track",
+                        progress: "50",
                     },
                 ],
             },
@@ -436,6 +443,7 @@ stride_projects.EmployeeProjectDashboard = class EmployeeProjectDashboard {
                 planned_days: "7",
                 actual_days: "6",
                 status: "On Track",
+                progress: "70",
                 details: [
                     {
                         allocated_project: "Project F",
@@ -443,6 +451,7 @@ stride_projects.EmployeeProjectDashboard = class EmployeeProjectDashboard {
                         planned_days: "7",
                         actual_days: "6",
                         status: "Off Track",
+                        progress: "40",
                     },
                 ],
             },
@@ -455,6 +464,7 @@ stride_projects.EmployeeProjectDashboard = class EmployeeProjectDashboard {
                 planned_days: "28",
                 actual_days: "25",
                 status: "On Track",
+                progress: "94",
                 details: [
                     {
                         allocated_project: "Project G",
@@ -462,6 +472,7 @@ stride_projects.EmployeeProjectDashboard = class EmployeeProjectDashboard {
                         planned_days: "14",
                         actual_days: "12",
                         status: "On Track",
+                        progress: "85",
                     },
                     {
                         allocated_project: "Project H",
@@ -469,6 +480,7 @@ stride_projects.EmployeeProjectDashboard = class EmployeeProjectDashboard {
                         planned_days: "7",
                         actual_days: "6",
                         status: "Off Track",
+                        progress: "55",
                     },
                     {
                         allocated_project: "Project I",
@@ -476,14 +488,15 @@ stride_projects.EmployeeProjectDashboard = class EmployeeProjectDashboard {
                         planned_days: "7",
                         actual_days: "6",
                         status: "On Track",
+                        progress: "95",
                     },
                 ],
             },
         ];
         let data = team_members.map(({ fname, lname, image_url, ...rest }) => {
             let imageComponent = {
-                title: fname,
-                subtitle: lname,
+                label: fname,
+                sublabel: lname,
                 image_url: image_url,
             };
             return { image_component: imageComponent, ...rest };
@@ -495,6 +508,7 @@ stride_projects.EmployeeProjectDashboard = class EmployeeProjectDashboard {
             planned_days: "Planned Days",
             actual_days: "Actual Days",
             status: "Status",
+            progress: "Progress",
             details: "Details",
         };
         me.TableWidget = new stride_projects.TableWidget({
@@ -512,6 +526,9 @@ stride_projects.EmployeeProjectDashboard = class EmployeeProjectDashboard {
                     "Off Track": "red",
                 },
             },
+            progress_bar: {
+                fields: ["progress"]
+            }
         });
     }
 
@@ -914,6 +931,39 @@ stride_projects.NotesWidget = class NotesWidget {
     }
 };
 
+stride_projects.AvatarWidget = class AvatarWidget {
+    constructor(opts) {
+        $.extend(this, opts);
+        this.show();
+    }
+
+    show() {
+        let avatar = frappe.avatar(
+            null,
+            "avatar-large",
+            this.name,
+            this.image_url,
+            false,
+            false
+        );
+        this.avatarCell.innerHTML = `
+        <td>
+          <div class="row">
+            <div class="col-auto">
+              ${avatar}
+            </div>
+            <div class="col d-flex align-items-center">
+              <div class="d-flex flex-column">
+                <div class="text-left" style="font-size: larger">${this.label}</div>
+                <div class="text-left text-muted">${this.sublabel}</div>
+              </div>
+            </div>
+          </div>
+        </td>
+      `;
+    }
+};
+
 stride_projects.TableWidget = class TableWidget {
     constructor(opts) {
         $.extend(this, opts);
@@ -945,7 +995,7 @@ stride_projects.TableWidget = class TableWidget {
     render_table_skeleton(table_id) {
         return `
           <div class="container">
-            <table id="${table_id}" class="table table-borderless">
+            <table id="${table_id}" class="table table-borderless table-widget">
             </table>
           </div>
         `;
@@ -982,16 +1032,27 @@ stride_projects.TableWidget = class TableWidget {
             let row = document.createElement("tr");
 
             columnNames.forEach(columnName => {
-                if (this.imageComponents.length > 0 && this.imageComponents.includes(columnName)) {
-                    let imageComponentCell = document.createElement("td");
-                    imageComponentCell.innerHTML = this.render_image_component(
-                        data_row.image_component.image_url,
-                        data_row.image_component.title,
-                        data_row.image_component.subtitle
-                    );
-                    row.appendChild(imageComponentCell);
-                }
-                else if (columnName !== "details") {
+                if (
+                    this.imageComponents.length > 0 &&
+                    this.imageComponents.includes(columnName)
+                ) {
+                    let avatarCell = document.createElement("td");
+                    let avatarWidget = new stride_projects.AvatarWidget({
+                        image_url: data_row.image_component.image_url,
+                        label: data_row.image_component.label,
+                        sublabel: data_row.image_component.sublabel,
+                        avatarCell: avatarCell,
+                        name:
+                            data_row.image_component.label +
+                            data_row.image_component.sublabel,
+                    });
+                    // avatarCell.innerHTML = this.render_image_component(
+                    //     data_row.image_component.image_url,
+                    //     data_row.image_component.label,
+                    //     data_row.image_component.sublabel
+                    // );
+                    row.appendChild(avatarCell);
+                } else if (columnName !== "details") {
                     this.set_cell_data(columnName, data_row, row);
                 }
             });
@@ -1004,6 +1065,7 @@ stride_projects.TableWidget = class TableWidget {
                 this.create_collapse_button(data_row, row);
                 data_row.details.forEach(detail => {
                     let detailRow = document.createElement("tr");
+                    detailRow.style.backgroundColor = "#161a1f52";
                     detailRow.className = "collapse";
                     detailRow.id = `collapse-${data_row.image_component.title}-${data_row.image_component.subtitle}`;
                     columnNames.forEach(columnName => {
@@ -1026,6 +1088,7 @@ stride_projects.TableWidget = class TableWidget {
         let collapseCell = document.createElement("td");
         let collapseButton = document.createElement("button");
         collapseButton.className = "btn btn-primary";
+        collapseButton.setAttribute("type", "button");
         collapseButton.setAttribute("data-toggle", "collapse");
         collapseButton.setAttribute(
             "data-target",
@@ -1038,11 +1101,15 @@ stride_projects.TableWidget = class TableWidget {
 
     set_cell_data(columnName, data_row, row) {
         let cell = document.createElement("td");
-        if (this.indicator_pill &&
-            columnName == this.indicator_pill.field_name) {
+        if (this.indicator_pill && columnName == this.indicator_pill.field_name) {
             cell.innerHTML = this.render_indicator_pill(
                 data_row[columnName],
                 this.indicator_pill.valueColorMap[data_row[columnName]]
+            );
+        } else if (this.progress_bar.fields && this.progress_bar.fields.includes(columnName)) {
+            cell.innerHTML = this.render_progress_bar(
+                parseInt(data_row[columnName]),
+                "#161a1f52"
             );
         } else {
             cell.textContent = data_row[columnName];
@@ -1052,5 +1119,20 @@ stride_projects.TableWidget = class TableWidget {
 
     render_indicator_pill(text, color) {
         return `<span class="indicator-pill whitespace-nowrap ${color}"><span>${text}</span></span>`;
+    }
+
+    render_progress_bar(progress, backgroundColor) {
+        return `
+          <div class="row">
+            <div class="col-lg-8 p-0">
+              <div class="progress" role="progressbar" aria-valuenow="${progress}" aria-valuemin="0" aria-valuemax="100" style="height: 20px; background-color: ${backgroundColor}">
+                <div class="progress-bar" style="width: ${progress}%"></div>
+              </div>
+            </div>
+            <div class="col-lg-4 p-0 text-center">
+              <small>${progress}%</small>
+            </div>
+          </div>
+        `;
     }
 };
