@@ -120,3 +120,8 @@
 	content: '-';
 	font-size: 2rem;
 }
+
+.avatar-xl {
+	height: 100px;
+	width: 100px;
+}

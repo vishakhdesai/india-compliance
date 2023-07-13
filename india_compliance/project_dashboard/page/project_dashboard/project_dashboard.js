@@ -250,7 +250,7 @@ stride_projects.EmployeeProjectDashboard = class EmployeeProjectDashboard {
     get_project_overview_html() {
         const me = this;
         const project_row = this.wrapper.find(".row.project-overview");
-        if (!this.project) return project_row.addClass("hidden");
+        // if (!this.project) return project_row.addClass("hidden");
         // frappe.call({
         //     method: "stride_projects.stride_projects.doctype.project.project.get_all_milestones_html",
         //     args: {
@@ -266,6 +266,10 @@ stride_projects.EmployeeProjectDashboard = class EmployeeProjectDashboard {
         //             .append(r.message);
         //     },
         // });
+
+        me.ProjectOverview = new stride_projects.ProjectOverview({
+            container: me.wrapper.find(".project-overview-wrapper.project-overview"),
+        });
     }
 
     get_project_info_html() {
@@ -546,7 +550,6 @@ stride_projects.EmployeeProjectDashboard = class EmployeeProjectDashboard {
     }
 
     reload() {
-        debugger;
         this.get_project_overview_html();
         this.get_project_info_html();
         this.refresh_chart_widgets();
@@ -953,14 +956,13 @@ stride_projects.AvatarWidget = class AvatarWidget {
     show() {
         let avatar = frappe.avatar(
             null,
-            "avatar-large",
+            this.css || "avatar-large",
             this.name,
             this.image_url,
             false,
             false
         );
         this.avatarCell.innerHTML = `
-        <td>
           <div class="row pl-1">
             <div class="col-auto">
               ${avatar}
@@ -972,7 +974,6 @@ stride_projects.AvatarWidget = class AvatarWidget {
               </div>
             </div>
           </div>
-        </td>
       `;
     }
 };
@@ -1162,3 +1163,107 @@ stride_projects.TableWidget = class TableWidget {
         `;
     }
 };
+
+stride_projects.ProjectOverview = class ProjectOverview {
+    constructor(opts) {
+        $.extend(this, opts);
+        this.container = this.container.empty();
+        this.show();
+    }
+
+    show() {
+        this.container.append(
+            `<div class="row d-flex justify-content-center">
+                <div class="col-md-4">
+                    <div class="title-area">
+                        <h4 class="card-title text-left" id="project-overview">Project Title</h4>
+                    </div>
+                    <div class="text-muted mt-5 mb-3 p-2">
+                        Last synced 1 minute ago
+                    </div>
+                    <div class="project-avatar mt-3 p-2">
+                    </div>
+                    <div class="text-muted mt-3 mb-3 p-2">
+                        Managed by
+                    </div>
+                    <div class="project-manager-avatar mt-3 p-2">
+                    </div>
+                    <div class="text-muted mt-3 mb-1 p-2">
+                        Project Status
+                    </div>
+                    <div class="project-status mt-1 p-2">
+                    </div>
+                </div>
+                <div class="col-md-5">
+                    <div class="row p-1">
+                        <div class="col-md-12 p-1">
+                            <div class="card kanban-card">Card 1</div>
+                        </div>
+                    </div>
+                    <div class="row p-1">
+                        <div class="col-md-12 p-1">
+                            <div class="card kanban-card">Card 2</div>
+                        </div>
+                    </div>
+                    <div class="row p-1">
+                        <div class="col-md-6 p-1">
+                            <div class="card kanban-card">Card 3</div>
+                        </div>
+                        <div class="col-md-6 p-1">
+                            <div class="card kanban-card">Card 4</div>
+                        </div>
+                    </div>
+                    <div class="row p-1">
+                        <div class="col-md-6 p-1">
+                            <div class="card kanban-card">Card 5</div>
+                        </div>
+                        <div class="col-md-6 p-1">
+                            <div class="card kanban-card">Card 6</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="row p-1">
+                        <div class="col-md-12 p-1">
+                            <div class="card kanban-card">Card 1</div>
+                        </div>
+                    </div>
+                    <div class="row p-1">
+                        <div class="col-md-12 p-1">
+                            <div class="card kanban-card">Card 2</div>
+                        </div>
+                    </div>
+                </div>
+            </div>`
+        );
+
+        let projectAvatarContainer = this.container.find(".project-avatar");
+        let projectAvatarWidget = new stride_projects.AvatarWidget({
+            avatarCell: projectAvatarContainer[0], // Pass the DOM element
+            name: "John Doe",
+            image_url: "",
+            label: "John Doe",
+            sublabel: "Developer",
+            css: "avatar-large avatar-xl"
+        });
+
+        let projectManagerAvatarContainer = this.container.find(".project-manager-avatar");
+        let projectManagerAvatarWidget = new stride_projects.AvatarWidget({
+            avatarCell: projectManagerAvatarContainer[0], // Pass the DOM element
+            name: "John Doe",
+            image_url: "",
+            label: "John Doe",
+            sublabel: "Developer",
+            css: "avatar-medium"
+        });
+        let projectStatusContainer = this.container.find(".project-status");
+        projectStatusContainer[0].innerHTML = this.render_indicator_pill(
+            "On Track",
+            "green"
+        )
+    }
+    render_indicator_pill(text, color) {
+        return `<span class="indicator-pill whitespace-nowrap ${color}"><span>${text}</span></span>`;
+    }
+};
+
