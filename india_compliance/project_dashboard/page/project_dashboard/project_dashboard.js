@@ -540,6 +540,7 @@ stride_projects.EmployeeProjectDashboard = class EmployeeProjectDashboard {
             progress_bar: {
                 fields: ["progress"],
             },
+            title_area: me.wrapper.find(".project-time-table .title-area"),
             // icon_fields: {
             //     progress: {
             //         icon: "star",
@@ -1001,6 +1002,32 @@ stride_projects.TableWidget = class TableWidget {
         return columnNames;
     }
     show() {
+        this.title_area.append(`
+            <div class="standard-filter-section flex">
+                <div class="filter-section flex">
+                    <div class="filter-selector">
+                        <div class="btn-group">
+                            <button class="btn btn-default btn-sm filter-button">
+                                <span class="filter-icon">
+                                    ${frappe.utils.icon("filter")}
+                                </span>
+                                <span class="button-label hidden-xs">
+                                    ${__("Filter")}
+                                </span>
+                            </button>
+                            <button class="btn btn-default btn-sm filter-x-button" title="${__(
+                                "Clear all filters"
+                            )}">
+                                <span class="filter-icon">
+                                    ${frappe.utils.icon("filter-x")}
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `);
+
         let columnNames = this.getColumnNames();
 
         this.container.append(this.render_table_skeleton(this.table_id));
@@ -1244,26 +1271,27 @@ stride_projects.ProjectOverview = class ProjectOverview {
             image_url: "",
             label: "John Doe",
             sublabel: "Developer",
-            css: "avatar-large avatar-xl"
+            css: "avatar-large avatar-xl",
         });
 
-        let projectManagerAvatarContainer = this.container.find(".project-manager-avatar");
+        let projectManagerAvatarContainer = this.container.find(
+            ".project-manager-avatar"
+        );
         let projectManagerAvatarWidget = new stride_projects.AvatarWidget({
             avatarCell: projectManagerAvatarContainer[0], // Pass the DOM element
             name: "John Doe",
             image_url: "",
             label: "John Doe",
             sublabel: "Developer",
-            css: "avatar-medium"
+            css: "avatar-medium",
         });
         let projectStatusContainer = this.container.find(".project-status");
         projectStatusContainer[0].innerHTML = this.render_indicator_pill(
             "On Track",
             "green"
-        )
+        );
     }
     render_indicator_pill(text, color) {
         return `<span class="indicator-pill whitespace-nowrap ${color}"><span>${text}</span></span>`;
     }
 };
-
