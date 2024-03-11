@@ -320,6 +320,30 @@ Object.assign(india_compliance, {
             .find(`.dropdown-item[data-label="${encodeURIComponent(btn_name)}"]`)
             .addClass("text-danger");
     },
+
+    add_sidebar_item(frm, args) {
+        frm.page.sidebar.find(`.${args["btn_name"]}-list-item`).remove();
+        frm.page.sidebar.find(".sidebar-menu.followed-by-section").before(`
+            <ul class="${args["btn_name"]}-list-item list-unstyled sidebar-menu ">
+                <li>
+                    <span class="form-sidebar-items">
+                        <span>
+                            <svg class="es-icon ml-0 icon-sm">
+                                <use href="#${args["icon"]}"></use>
+                            </svg>
+                            <span class="ellipsis">${args["label"]}</span>
+                        </span>
+                        <button class="${args["btn_name"]}-btn shares btn btn-link icon-btn">
+                            <svg class="es-icon icon-sm">
+                                <use href="#${args["btn_icon"]}"></use>
+                            </svg>
+                        </button>
+                    </span>
+                </li>
+            </ul>
+        `);
+        return frm.page.sidebar.find(`.${args["btn_name"]}-btn`);
+    }
 });
 
 function is_gstin_check_digit_valid(gstin) {

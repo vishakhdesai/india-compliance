@@ -26,16 +26,17 @@ frappe.ui.form.on("Sales Invoice", {
         const is_einv_generatable = is_e_invoice_generatable(frm, true);
 
         if (frm.doc.docstatus === 0 || !is_einv_generatable) {
-            frm.add_custom_button(
-                __("Applicability Status"),
-                () =>
-                    show_e_invoice_applicability_status(
-                        frm,
-                        is_einv_generatable
-                    ),
-                "e-Invoice"
-            );
 
+            let e_invoice_applicability_btn = india_compliance.add_sidebar_item(frm, {
+                label: "e-Invoice",
+                icon: "invoice-icon-light",
+                btn_name: "e-invoice-applicability",
+                btn_icon: is_einv_generatable ? "es-line-check" : "es-line-close"
+            });
+
+            e_invoice_applicability_btn.on("click", () =>
+                show_e_invoice_applicability_status(frm, is_einv_generatable)
+            );
             return;
         }
 

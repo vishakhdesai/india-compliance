@@ -48,10 +48,15 @@ function setup_e_waybill_actions(doctype) {
                     frm._ewb_message = "To generate e-Waybill, change e-Waybill Status to Pending.";
                 }
 
-                frm.add_custom_button(
-                    __("Applicability Status"),
-                    () => show_e_waybill_generatable_status(frm, is_ewb_generatable),
-                    "e-Waybill"
+                let e_waybill_applicability_btn = india_compliance.add_sidebar_item(frm, {
+                    label: "e-Waybill",
+                    icon: "truck-icon-light",
+                    btn_name: "e-Waybill-applicability",
+                    btn_icon: is_ewb_generatable ? "es-line-check" : "es-line-close",
+                });
+
+                e_waybill_applicability_btn.on("click", () =>
+                    show_e_waybill_generatable_status(frm, is_ewb_generatable)
                 );
                 return;
             }

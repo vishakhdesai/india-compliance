@@ -27,6 +27,7 @@ setup_wizard_complete = "india_compliance.gst_india.setup.setup_wizard_complete"
 setup_wizard_stages = "india_compliance.setup_wizard.get_setup_wizard_stages"
 
 app_include_js = "india_compliance.bundle.js"
+app_include_icons = ["india_compliance/icons/icons.svg"]
 
 doctype_js = {
     "Address": "gst_india/client_scripts/address.js",
