@@ -583,6 +583,10 @@ def validate_items(doc):
     if not doc.get("items"):
         return
 
+    # Only validate if any tax row has dont_recompute_tax enabled
+    if not any(row.dont_recompute_tax for row in doc.taxes):
+        return
+
     item_tax_templates = frappe._dict()
     items_with_duplicate_taxes = []
 
@@ -1153,6 +1157,7 @@ class ItemGSTDetails:
 
         self.get_item_defaults()
         self.set_tax_amount_precisions(doc.doctype)
+        self.calculate_item_wise_total_tax_amount()
         self.set_item_wise_tax_details()
         self.update_item_tax_details()
 
@@ -1164,6 +1169,56 @@ class ItemGSTDetails:
             item_defaults[f"{row}_amount"] = 0
 
         self.item_defaults = item_defaults
+
+    def calculate_item_wise_total_tax_amount(self):
+        """
+        Calculate total tax amount for each item for each tax type (item_name / item_code is the key)
+        Set tax_rate used for each item row for each tax type (item.idx is the key)
+
+        Example:
+
+        item_wise_total_tax_amount = {
+            "item_key": {
+            "tax_row1.name": sum(taxable_value * tax_rate1 for each row with same item_key),
+            "tax_row2.name": sum(taxable_value * tax_rate2 for each row with same item_key),
+            }
+        }
+        item_row_wise_tax_rate = {
+            item1.idx: {"tax_row1.name": tax_rate1, "tax_row2.name": tax_rate2},
+            item2.idx: {"tax_row1.name": tax_rate1, "tax_row2.name": tax_rate2},
+        }
+        """
+
+        self.item_wise_total_tax_amount = frappe._dict()
+        item_tax_rates = frappe._dict(
+            {item.idx: json.loads(item.item_tax_rate) for item in self.doc.get("items")}
+        )
+        self.item_row_wise_tax_rate = frappe._dict()
+
+        for row in self.doc.taxes:
+            if (
+                not row.base_tax_amount_after_discount_amount
+                or row.gst_tax_type not in GST_TAX_TYPES
+                or not row.item_wise_tax_detail
+            ):
+                continue
+
+            for item in self.doc.get("items"):
+                item_key = self.get_item_key(item)
+                item_tax_rate = item_tax_rates[item.idx]
+                tax_rate = item_tax_rate.get(row.account_head) or row.rate
+
+                item_idx_tax_rate_map = self.item_row_wise_tax_rate.setdefault(
+                    item.idx, {}
+                )
+                item_idx_tax_rate_map[row.name] = tax_rate
+
+                item_tax_type_map = self.item_wise_total_tax_amount.setdefault(
+                    item_key, {}
+                )
+                total_tax_amount = item_tax_type_map.get(row.name) or 0
+                total_tax_amount += item.taxable_value * (tax_rate / 100)
+                item_tax_type_map[row.name] = total_tax_amount
 
     def set_item_wise_tax_details(self):
         """
@@ -1187,9 +1242,10 @@ class ItemGSTDetails:
         """
 
         tax_details = frappe._dict()
+        self.item_wise_tax_details = frappe._dict()
 
         for row in self.doc.get("items"):
-            key = row.item_code or row.item_name
+            key = self.get_item_key(row)
 
             if key not in tax_details:
                 tax_details[key] = self.item_defaults.copy()
@@ -1208,6 +1264,7 @@ class ItemGSTDetails:
             tax_amount_field = f"{tax}_amount"
 
             old = json.loads(row.item_wise_tax_detail)
+            self.item_wise_tax_details[row.name] = old
 
             tax_difference = row.base_tax_amount_after_discount_amount
             last_item_with_tax = None
@@ -1242,8 +1299,31 @@ class ItemGSTDetails:
             # Handle rounding errors
             if tax_difference and last_item_with_tax:
                 last_item_with_tax[tax_amount_field] += tax_difference
-
         self.item_tax_details = tax_details
+
+    def get_item_row_tax_rate(self, item, tax_row, default_rate):
+        item_idx_tax_rate_map = self.item_row_wise_tax_rate.get(item.idx)
+
+        if not item_idx_tax_rate_map:
+            return default_rate
+
+        tax_rate = item_idx_tax_rate_map.get(tax_row.name)
+
+        return tax_rate if tax_rate is not None else default_rate
+
+    def get_item_row_tax_amount_factor(self, item, tax_row):
+        key = self.get_item_key(item)
+        item_tax_type_map = self.item_wise_total_tax_amount.get(key) or {}
+        total_tax_amount = item_tax_type_map.get(tax_row.name)
+
+        if not total_tax_amount:
+            return 1
+
+        item_wise_tax_detail = self.item_wise_tax_details.get(tax_row.name) or {}
+        total_tax_amount_used = item_wise_tax_detail.get(key).get("tax_amount", 0)
+        tax_amount_factor = total_tax_amount_used / total_tax_amount
+
+        return tax_amount_factor or 1
 
     def update_item_tax_details(self):
         for item in self.doc.get("items"):
@@ -1277,8 +1357,17 @@ class ItemGSTDetails:
 
         # Handle rounding errors
         response = item_tax_detail.copy()
-        for tax in GST_TAX_TYPES:
-            if (tax_rate := item_tax_detail[f"{tax}_rate"]) == 0:
+        for row in self.doc.taxes:
+            if row.gst_tax_type not in GST_TAX_TYPES:
+                continue
+
+            tax = row.gst_tax_type
+            tax_rate_field = f"{tax}_rate"
+            tax_rate = self.get_item_row_tax_rate(
+                item, row, item_tax_detail[tax_rate_field]
+            )
+
+            if tax == 0:
                 continue
 
             tax_amount_field = f"{tax}_amount"
@@ -1287,11 +1376,17 @@ class ItemGSTDetails:
             multiplier = (
                 item.qty if tax == "cess_non_advol" else item.taxable_value / 100
             )
-            tax_amount = flt(tax_rate * multiplier, precision)
 
+            tax_amount_factor = (
+                1
+                if tax == "cess_non_advol"
+                else self.get_item_row_tax_amount_factor(item, row)
+            )
+
+            tax_amount = flt(tax_amount_factor * tax_rate * multiplier, precision)
             item_tax_detail[tax_amount_field] -= tax_amount
 
-            response.update({tax_amount_field: tax_amount})
+            response.update({tax_amount_field: tax_amount, tax_rate_field: tax_rate})
 
         return response
 
