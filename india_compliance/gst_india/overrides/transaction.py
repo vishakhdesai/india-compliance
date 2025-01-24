@@ -584,7 +584,7 @@ def validate_items(doc):
         return
 
     # Only validate if any tax row has dont_recompute_tax enabled
-    if not any(row.dont_recompute_tax for row in doc.taxes):
+    if not any(row.get("dont_recompute_tax") for row in doc.taxes):
         return
 
     item_tax_templates = frappe._dict()
@@ -1157,7 +1157,6 @@ class ItemGSTDetails:
 
         self.get_item_defaults()
         self.set_tax_amount_precisions(doc.doctype)
-        self.calculate_item_wise_total_tax_amount()
         self.set_item_wise_tax_details()
         self.update_item_tax_details()
 
@@ -1191,7 +1190,10 @@ class ItemGSTDetails:
 
         self.item_wise_total_tax_amount = frappe._dict()
         item_tax_rates = frappe._dict(
-            {item.idx: json.loads(item.item_tax_rate) for item in self.doc.get("items")}
+            {
+                item.idx: frappe.parse_json(item.get("item_tax_rate"))
+                for item in self.doc.get("items")
+            }
         )
         self.item_row_wise_tax_rate = frappe._dict()
 
@@ -1240,6 +1242,7 @@ class ItemGSTDetails:
         - There could be more than one row for same account
         - Item count added to handle rounding errors
         """
+        self.calculate_item_wise_total_tax_amount()
 
         tax_details = frappe._dict()
         self.item_wise_tax_details = frappe._dict()
