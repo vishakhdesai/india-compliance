@@ -39,6 +39,7 @@ class GSTSettings(Document):
 
     def validate(self):
         self.update_dependant_fields()
+        self.validate_gstin_status_refresh_interval()
         self.validate_enable_api()
         self.validate_gst_accounts()
         self.validate_e_invoice_applicability_date()
@@ -313,6 +314,17 @@ class GSTSettings(Document):
                 )
 
             company_list.append(row.company)
+
+    def validate_gstin_status_refresh_interval(self):
+        if not (
+            self.enable_api
+            and self.validate_gstin_status
+            and self.gstin_status_refresh_interval is not None
+        ):
+            return
+
+        if self.gstin_status_refresh_interval < 15:
+            frappe.throw(_("GSTIN Status Refresh Interval cannot be less than 15 days"))
 
     def is_sek_valid(self, gstin, throw=False, threshold=30):
         for credential in self.credentials:

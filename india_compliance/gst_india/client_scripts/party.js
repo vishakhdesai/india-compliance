@@ -117,7 +117,7 @@ function set_gstin_options_and_status(doctype) {
     frappe.ui.form.on(doctype, {
         refresh(frm) {
             set_gstin_options(frm);
-            india_compliance.set_gstin_status(frm.get_field("gstin"));
+            india_compliance.set_gstin_status(frm.get_field("gstin"), null, null, 1);
         },
         gstin(frm) {
             india_compliance.set_gstin_status(frm.get_field("gstin"));

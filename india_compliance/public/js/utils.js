@@ -86,13 +86,13 @@ Object.assign(india_compliance, {
         return in_list(frappe.boot.sales_doctypes, doctype) ? "Customer" : "Supplier";
     },
 
-    async set_gstin_status(field, transaction_date, force_update) {
+    async set_gstin_status(field, transaction_date, force_update, docstatus) {
         const gstin = field.value;
         if (!gstin || gstin.length !== 15) return field.set_description("");
 
         const { message } = await frappe.call({
             method: "india_compliance.gst_india.doctype.gstin.gstin.get_gstin_status",
-            args: { gstin, transaction_date, force_update },
+            args: { gstin, transaction_date, force_update, docstatus },
         });
 
         if (!message) return field.set_description("");
