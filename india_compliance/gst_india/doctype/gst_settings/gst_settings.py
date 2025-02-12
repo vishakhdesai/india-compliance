@@ -324,7 +324,12 @@ class GSTSettings(Document):
             return
 
         if self.gstin_status_refresh_interval < 15:
-            frappe.throw(_("GSTIN Status Refresh Interval cannot be less than 15 days"))
+            self.gstin_status_refresh_interval = 15
+            frappe.msgprint(
+                _("GSTIN status refresh interval has been set to a minimum of 15 days"),
+                alert=True,
+                indicator="yellow",
+            )
 
     def is_sek_valid(self, gstin, throw=False, threshold=30):
         for credential in self.credentials:
