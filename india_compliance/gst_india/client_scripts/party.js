@@ -71,7 +71,7 @@ function validate_gstin(doctype) {
                 frm.doc.pan = pan;
                 frm.refresh_field("pan");
                 set_party_type(frm);
-                if(doctype != "Address"){
+                if (doctype != "Address") {
                     india_compliance.set_pan_status(frm.get_field("pan"));
                 }
             }
@@ -117,7 +117,7 @@ function set_gstin_options_and_status(doctype) {
     frappe.ui.form.on(doctype, {
         refresh(frm) {
             set_gstin_options(frm);
-            india_compliance.set_gstin_status(frm.get_field("gstin"), null, null, 1);
+            india_compliance.set_gstin_status(frm.get_field("gstin"));
         },
         gstin(frm) {
             india_compliance.set_gstin_status(frm.get_field("gstin"));
